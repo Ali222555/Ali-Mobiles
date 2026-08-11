@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ALI MOBILES - Cloud Secured POS</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    
+    <!-- Firebase SDKs -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #0f172a;
+            --accent: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #d97706;
+            --bg: #f8fafc;
+            --card-bg: #ffffff;
+            --text: #334155;
+        }
+
+        * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; }
+        body { background: var(--bg); color: var(--text); display: flex; height: 100vh; overflow: hidden; }
+
+        .sidebar { width: 250px; background: var(--primary); color: white; display: flex; flex-direction: column; }
+        .brand { padding: 20px; background: var(--secondary); text-align: center; border-bottom: 1px solid #334155; }
+        .brand h2 { font-size: 20px; color: #38bdf8; }
+        
+        .user-tag { font-size: 13px; color: #cbd5e1; margin-top: 5px; }
+
+        .nav-menu { list-style: none; padding: 15px 0; flex: 1; overflow-y: auto; }
+        .nav-item { padding: 12px 20px; display: flex; align-items: center; gap: 12px; color: #cbd5e1; cursor: pointer; transition: 0.2s; font-size: 14px; }
+        .nav-item:hover, .nav-item.active { background: var(--accent); color: white; }
+
+        .main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+        .top-header { background: var(--card-bg); padding: 15px 30px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #e2e8f0; }
+        .content-body { padding: 25px; flex: 1; }
+
+        .hidden { display: none !important; }
+        .grid-2 { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+        .card { background: var(--card-bg); border-radius: 8px; padding: 20px; border: 1px solid #e2e8f0; }
+
+        input, select { width: 100%; padding: 10px; border: 1px solid #cbd5e1; border-radius: 6px; margin-top: 4px; }
+        .btn { padding: 10px 18px; border: none; border-radius: 6px; font-weight: 600; cursor: pointer; display: inline-flex; align-items: center; gap: 8px; }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-warning { background: var(--warning); color: white; }
+
+        table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+        th { background: #f1f5f9; text-align: left; padding: 12px; color: #475569; font-size: 13px; }
+        td { padding: 12px; border-bottom: 1px solid #e2e8f0; font-size: 14px; }
+
+        .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; margin-bottom: 20px; }
+        .stat-card { background: white; padding: 20px; border-radius: 8px; border-left: 4px solid var(--accent); }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="brand">
+            <h2>ALI MOBILES</h2>
+            <div class="user-tag"><i class="fa-solid fa-user"></i> User: <strong>Hamza</strong></div>
+            <p style="font-size: 11px; color: #16a34a; margin-top: 3px;"><i class="fa-solid fa-cloud"></i> Shift: 1 PM - 1:30 AM</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item active" onclick="switchTab('billingTab', this)"><i class="fa-solid fa-cart-shopping"></i> Billing Counter</li>
+            <li class="nav-item" onclick="switchTab('udhaarTab', this)"><i class="fa-solid fa-book"></i> Udhaar / Khata</li>
+            <li class="nav-item" onclick="switchTab('jazzcashTab', this)"><i class="fa-solid fa-wallet"></i> JazzCash / EasyPaisa</li>
+            <li class="nav-item" onclick="switchTab('cashRegisterTab', this)"><i class="fa-solid fa-vault"></i> Daily Sales & Cash</li>
+            <li class="nav-item" onclick="switchTab('expenseTab', this)"><i class="fa-solid fa-money-bill-transfer"></i> Shop Expenses</li>
+            <li class="nav-item" onclick="switchTab('adminTab', this)"><i class="fa-solid fa-boxes-stacked"></i> Admin & Reports</li>
+        </ul>
+        <div style="padding: 20px; display: flex; flex-direction: column; gap: 10px;">
+            <button class="btn btn-danger" style="width: 100%; justify-content: center;" onclick="toggleAdmin()"><span id="adminBtnText">Admin Unlock</span></button>
+            <button class="btn btn-primary" style="width: 100%; justify-content: center; font-size: 12px;" onclick="changeAdminPassword()"><i class="fa-solid fa-key"></i> Change Password</button>
+        </div>
+    </div>
+
+    <div class="main-content">
+        <div class="top-header">
+            <h3 id="pageTitle">Billing Counter</h3>
+            <span style="font-size: 14px; font-weight: 600; color: #16a34a;"><i class="fa-solid fa-calendar-day"></i> Business Date: <strong id="businessDateText">Loading...</strong></span>
+        </div>
+
+        <div class="content-body">
+            <!-- TAB 1: BILLING COUNTER -->
+            <div id="billingTab" class="tab-content grid-2">
+                <div class="card">
+                    <h3>Point of Sale Counter</h3>
+                    <input type="text" id="barcodeInput" placeholder="Scan Barcode or Type Product Name (Press Enter)..." onkeydown="if(event.key==='Enter') addToCart()">
+                    <table>
+                        <thead>
+                            <tr><th>Item</th><th>Price</th><th>Qty</th><th>Total</th><th>Action</th></tr>
+                        </thead>
+                        <tbody id="cartTable"></tbody>
+                    </table>
+                </div>
+
+                <div class="card">
+                    <h3>Checkout</h3>
+                    <label>Subtotal</label><input type="number" id="subTotal" value="0" readonly>
+                    <label>Discount</label><input type="number" id="discountInput" value="0" oninput="calculateTotal()">
+                    <label>Payment Mode</label>
+                    <select id="payMode">
+                        <option value="Cash">Cash</option>
+                        <option value="Card">Card</option>
+                        <option value="Online">Online Transfer</option>
+                        <option value="Udhaar">Udhaar / Khata</option>
+                    </select>
+                    <div style="margin-top: 20px; text-align: center;">
+                        <h2>Total: Rs. <span id="grandTotal">0</span></h2>
+                        <button class="btn btn-success" style="width: 100%; margin-top: 10px; justify-content: center;" onclick="checkout()">Process Bill</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- TAB 2: UDHAAR / KHATA -->
+            <div id="udhaarTab" class="tab-content hidden grid-2">
+                <div class="card">
+                    <h3>Customer Udhaar Register</h3>
+                    <table>
+                        <thead><tr><th>Customer</th><th>Phone</th><th>Details</th><th>Amount</th><th>Action</th></tr></thead>
+                        <tbody id="udhaarTable"></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Add Manual Udhaar Entry</h3>
+                    <label>Customer Name</label><input type="text" id="uName">
+                    <label>Phone Number</label><input type="text" id="uPhone">
+                    <label>Item / Detail</label><input type="text" id="uDetail">
+                    <label>Udhaar Amount</label><input type="number" id="uAmount">
+                    <button class="btn btn-warning" style="width: 100%; margin-top: 15px;" onclick="addUdhaar()">Save Udhaar Record</button>
+                </div>
+            </div>
+
+            <!-- TAB 3: JAZZCASH / EASYPAISA -->
+            <div id="jazzcashTab" class="tab-content hidden">
+                <div class="card" style="margin-bottom: 20px;">
+                    <h3>Mobile Money Transaction</h3>
+                    <div style="display: flex; gap: 10px; margin-top: 10px;">
+                        <select id="jcType"><option value="Cash-Out">Cash-Out</option><option value="Cash-In">Cash-In</option></select>
+                        <input type="number" id="jcAmount" placeholder="Amount">
+                        <input type="text" id="jcPhone" placeholder="Phone Number">
+                        <input type="number" id="jcFee" placeholder="Fee">
+                        <button class="btn btn-primary" onclick="addJcTransaction()">Save</button>
+                    </div>
+                </div>
+                <div class="card">
+                    <h3>Transaction Log (Current Shift)</h3>
+                    <table>
+                        <thead><tr><th>Time</th><th>Type</th><th>Phone</th><th>Amount</th><th>Fee</th></tr></thead>
+                        <tbody id="jcTable"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- TAB 4: DAILY SALES & CASH -->
+            <div id="cashRegisterTab" class="tab-content hidden">
+                <div class="card" style="margin-bottom: 20px; background: #f0fdf4; display: flex; justify-content: space-between; align-items: center;">
+                    <div>
+                        <h3>Subah 1:00 PM Ka Opening Cash Set Karein</h3>
+                        <div style="display: flex; gap: 10px; max-width: 400px; margin-top: 5px;">
+                            <input type="number" id="openingCashInput" placeholder="e.g. 20000">
+                            <button class="btn btn-success" onclick="setOpeningCash()">Save Opening</button>
+                        </div>
+                    </div>
+                    <div>
+                        <button class="btn btn-danger" onclick="closeShift()"><i class="fa-solid fa-lock"></i> Close Shift (1:30 AM)</button>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card"><h4>Opening Cash</h4><h2>Rs. <span id="regOpeningCash">0</span></h2></div>
+                    <div class="stat-card"><h4>Daily POS Cash Sales</h4><h2>Rs. <span id="regPosSales">0</span></h2></div>
+                    <div class="stat-card"><h4>JC Cash-In</h4><h2>Rs. <span id="regJcIn">0</span></h2></div>
+                    <div class="stat-card"><h4>JC Cash-Out</h4><h2>Rs. <span id="regJcOut">0</span></h2></div>
+                </div>
+                <div class="card" style="text-align: center; background: #0f172a; color: white; padding: 30px;">
+                    <h3>Expected Cash in Drawer (Closing Calculation):</h3>
+                    <h1 style="color: #38bdf8; font-size: 40px;">Rs. <span id="liveCounterCash">0</span></h1>
+                </div>
+            </div>
+
+            <!-- TAB 5: SHOP EXPENSES (OPEN FOR USER) -->
+            <div id="expenseTab" class="tab-content hidden grid-2">
+                <div class="card">
+                    <h3>Today's Expenses Log</h3>
+                    <table>
+                        <thead><tr><th>Time</th><th>Category / Detail</th><th>Amount</th><th>Action</th></tr></thead>
+                        <tbody id="expenseTable"></tbody>
+                    </table>
+                </div>
+                <div class="card">
+                    <h3>Add Shop Expense</h3>
+                    <label>Expense Detail (e.g. Chai, Petrol, Electricity)</label><input type="text" id="expDetail">
+                    <label>Amount (Rs.)</label><input type="number" id="expAmount">
+                    <button class="btn btn-danger" style="width: 100%; margin-top: 15px;" onclick="addExpense()">Add Expense</button>
+                </div>
+            </div>
+
+            <!-- TAB 6: ADMIN & REPORTS (STRICTLY ADMIN ONLY) -->
+            <div id="adminTab" class="tab-content hidden">
+                <div id="adminLockedNotice" class="card" style="text-align: center; padding: 40px;">
+                    <i class="fa-solid fa-lock" style="font-size: 50px; color: #dc2626; margin-bottom: 15px;"></i>
+                    <h2>Admin Section Locked</h2>
+                    <p style="color: #64748b; margin-top: 5px;">Unlock Admin access from the sidebar to view Profit Reports, Inventory Cost, and Stock Management.</p>
+                </div>
+
+                <div id="adminContent" class="hidden">
+                    <div class="stats-grid">
+                        <div class="stat-card" style="border-left-color: #16a34a;"><h4>Monthly Sales Total</h4><h2>Rs. <span id="monthlySalesVal">0</span></h2></div>
+                        <div class="stat-card" style="border-left-color: #dc2626;"><h4>Monthly Expenses</h4><h2>Rs. <span id="monthlyExpVal">0</span></h2></div>
+                        <div class="stat-card" style="border-left-color: #2563eb;"><h4>Net Estimated Profit</h4><h2>Rs. <span id="netProfitVal">0</span></h2></div>
+                        <div class="stat-card" style="border-left-color: #d97706;"><h4>Total Active Udhaar</h4><h2>Rs. <span id="totalUdhaarVal">0</span></h2></div>
+                    </div>
+
+                    <div class="grid-2" style="margin-top: 20px;">
+                        <div class="card">
+                            <h3>Current Inventory</h3>
+                            <table>
+                                <thead><tr><th>Code</th><th>Name</th><th>Cost</th><th>Price</th><th>Stock</th><th>Action</th></tr></thead>
+                                <tbody id="inventoryTable"></tbody>
+                            </table>
+                        </div>
+                        <div class="card">
+                            <h3>Add Product</h3>
+                            <label>Item Name</label><input type="text" id="pName">
+                            <label>Barcode/Code</label><input type="text" id="pCode">
+                            <label>Purchase Cost (Rs.)</label><input type="number" id="pCost">
+                            <label>Sale Price (Rs.)</label><input type="number" id="pPrice">
+                            <label>Stock Qty</label><input type="number" id="pQty">
+                            <button class="btn btn-success" style="width: 100%; margin-top: 15px;" onclick="addProduct()">Add to Inventory</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        const firebaseConfig = {
+            apiKey: "AIzaSyCEBlfH3gAdOGawxmamauJzITlYbcmWvMc",
+            authDomain: "alimobilespos.firebaseapp.com",
+            databaseURL: "https://alimobilespos-default-rtdb.firebaseio.com",
+            projectId: "alimobilespos",
+            storageBucket: "alimobilespos.firebasestorage.app",
+            messagingSenderId: "1068601974720",
+            appId: "1:1068601974720:web:ec3de574ade978b128f225",
+            measurementId: "G-9MN85FFYYP"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+
+        let isAdmin = false;
+        let adminPassword = "1234";
+        let products = [];
+        let jcLog = [];
+        let udhaarLog = [];
+        let expenseLog = [];
+        let posCashSales = 0;
+        let openingCash = 0;
+        let monthlySales = 0;
+        let cart = [];
+
+        function getShiftDate() {
+            let now = new Date();
+            if (now.getHours() < 3) { now.setDate(now.getDate() - 1); }
+            return now.toISOString().split('T')[0];
+        }
+
+        db.ref('posData').on('value', (snapshot) => {
+            const data = snapshot.val() || {};
+            products = data.products || [];
+            jcLog = data.jcLog || [];
+            udhaarLog = data.udhaarLog || [];
+            expenseLog = data.expenseLog || [];
+            posCashSales = data.posCashSales || 0;
+            openingCash = data.openingCash || 0;
+            monthlySales = data.monthlySales || 0;
+            adminPassword = data.adminPassword || "1234";
+            
+            document.getElementById('businessDateText').innerText = getShiftDate();
+            updateUI();
+        });
+
+        function syncToCloud() {
+            db.ref('posData').set({
+                products: products,
+                jcLog: jcLog,
+                udhaarLog: udhaarLog,
+                expenseLog: expenseLog,
+                posCashSales: posCashSales,
+                openingCash: openingCash,
+                monthlySales: monthlySales,
+                adminPassword: adminPassword
+            });
+        }
+
+        function switchTab(tabId, el) {
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.add('hidden'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById(tabId).classList.remove('hidden');
+            el.classList.add('active');
+        }
+
+        function toggleAdmin() {
+            if(!isAdmin) {
+                let pass = prompt("Enter Admin Password:");
+                if(pass === adminPassword) {
+                    isAdmin = true;
+                    document.getElementById('adminBtnText').innerText = "Admin Locked";
+                    document.getElementById('adminLockedNotice').classList.add('hidden');
+                    document.getElementById('adminContent').classList.remove('hidden');
+                    alert("Admin Access Granted!");
+                } else { alert("Wrong Password!"); }
+            } else {
+                isAdmin = false;
+                document.getElementById('adminBtnText').innerText = "Admin Unlock";
+                document.getElementById('adminLockedNotice').classList.remove('hidden');
+                document.getElementById('adminContent').classList.add('hidden');
+            }
+            updateUI();
+        }
+
+        function changeAdminPassword() {
+            let oldPass = prompt("Enter Current Password:");
+            if(oldPass === adminPassword) {
+                let newPass = prompt("Enter New Password:");
+                if(newPass && newPass.trim() !== "") {
+                    adminPassword = newPass;
+                    syncToCloud();
+                    alert("Password Changed Successfully!");
+                }
+            } else { alert("Wrong Password!"); }
+        }
+
+        function setOpeningCash() {
+            let val = parseFloat(document.getElementById('openingCashInput').value);
+            if(isNaN(val)) return alert("Enter valid cash!");
+            openingCash = val;
+            syncToCloud();
+            alert("Opening Cash Saved!");
+        }
+
+        function closeShift() {
+            if(!confirm("Aaj ki shift close karna chahte hain? Daily counter reset ho jayega.")) return;
+            posCashSales = 0;
+            openingCash = 0;
+            jcLog = [];
+            expenseLog = [];
+            syncToCloud();
+            alert("Shift closed successfully!");
+        }
+
+        function updateUI() {
+            let jcIn = 0, jcOut = 0;
+            let jcTable = document.getElementById('jcTable');
+            jcTable.innerHTML = '';
+            jcLog.forEach(log => {
+                if(log.type === 'Cash-In') jcIn += log.amount;
+                if(log.type === 'Cash-Out') jcOut += log.amount;
+                jcTable.innerHTML += `<tr><td>${log.time}</td><td>${log.type}</td><td>${log.phone}</td><td>Rs. ${log.amount}</td><td>Rs. ${log.fee}</td></tr>`;
+            });
+
+            let totalExp = 0;
+            let expTable = document.getElementById('expenseTable');
+            expTable.innerHTML = '';
+            expenseLog.forEach((exp, idx) => {
+                totalExp += exp.amount;
+                let deleteBtn = isAdmin ? `<button class="btn btn-danger" onclick="deleteExpense(${idx})">X</button>` : '-';
+                expTable.innerHTML += `<tr><td>${exp.time}</td><td>${exp.detail}</td><td>Rs. ${exp.amount}</td><td>${deleteBtn}</td></tr>`;
+            });
+
+            let totalUdhaar = 0;
+            let uTable = document.getElementById('udhaarTable');
+            uTable.innerHTML = '';
+            udhaarLog.forEach((u, idx) => {
+                if(!u.cleared) totalUdhaar += u.amount;
+                uTable.innerHTML += `<tr><td>${u.name}</td><td>${u.phone}</td><td>${u.detail}</td><td>Rs. ${u.amount}</td><td>${u.cleared ? '<span style="color:green;font-weight:bold;">Cleared</span>' : `<button class="btn btn-success" onclick="clearUdhaar(${idx})">Clear Khata</button>`}</td></tr>`;
+            });
+
+            document.getElementById('regOpeningCash').innerText = openingCash;
+            document.getElementById('regPosSales').innerText = posCashSales;
+            document.getElementById('regJcIn').innerText = jcIn;
+            document.getElementById('regJcOut').innerText = jcOut;
+            document.getElementById('liveCounterCash').innerText = openingCash + posCashSales + jcIn - jcOut - totalExp;
+
+            document.getElementById('monthlySalesVal').innerText = monthlySales;
+            document.getElementById('monthlyExpVal').innerText = totalExp;
+            document.getElementById('netProfitVal').innerText = Math.max(0, (monthlySales * 0.15) - totalExp); 
+            document.getElementById('totalUdhaarVal').innerText = totalUdhaar;
+
+            let invTable = document.getElementById('inventoryTable');
+            invTable.innerHTML = '';
+            products.forEach((p, idx) => {
+                invTable.innerHTML += `<tr><td>${p.code}</td><td>${p.name}</td><td>Rs. ${p.cost || 0}</td><td>Rs. ${p.price}</td><td>${p.qty}</td><td><button class="btn btn-danger" onclick="deleteProduct(${idx})"><i class="fa-solid fa-trash"></i></button></td></tr>`;
+            });
+        }
+
+        function addToCart() {
+            let input = document.getElementById('barcodeInput').value.toLowerCase();
+            let prod = products.find(p => p.code.toLowerCase() === input || p.name.toLowerCase().includes(input));
+            if(!prod) return alert("Item not found!");
+            
+            let existing = cart.find(c => c.code === prod.code);
+            if(existing) existing.cartQty++;
+            else cart.push({ ...prod, cartQty: 1 });
+
+            renderCart();
+            document.getElementById('barcodeInput').value = '';
+        }
+
+        function renderCart() {
+            let table = document.getElementById('cartTable');
+            table.innerHTML = '';
+            let sub = 0;
+            cart.forEach((i, idx) => {
+                let total = i.price * i.cartQty;
+                sub += total;
+                table.innerHTML += `<tr><td>${i.name}</td><td>Rs. ${i.price}</td><td>${i.cartQty}</td><td>Rs. ${total}</td><td><button class="btn btn-danger" onclick="cart.splice(${idx},1); renderCart();">X</button></td></tr>`;
+            });
+            document.getElementById('subTotal').value = sub;
+            calculateTotal();
+        }
+
+        function calculateTotal() {
+            let sub = parseFloat(document.getElementById('subTotal').value) || 0;
+            let disc = parseFloat(document.getElementById('discountInput').value) || 0;
+            document.getElementById('grandTotal').innerText = Math.max(0, sub - disc);
+        }
+
+        function checkout() {
+            if(!cart.length) return alert("Cart empty!");
+            let finalAmt = parseFloat(document.getElementById('grandTotal').innerText);
+            let payMode = document.getElementById('payMode').value;
+            
+            cart.forEach(c => {
+                let p = products.find(prod => prod.code === c.code);
+                if(p) p.qty -= c.cartQty;
+            });
+
+            if(payMode === 'Cash') posCashSales += finalAmt;
+            if(payMode === 'Udhaar') {
+                let name = prompt("Enter Customer Name for Udhaar:");
+                let phone = prompt("Enter Phone Number:");
+                if(name) {
+                    udhaarLog.unshift({ name, phone, detail: "POS Bill Sale", amount: finalAmt, cleared: false });
+                }
+            }
+
+            monthlySales += finalAmt;
+            syncToCloud();
+            cart = [];
+            renderCart();
+            alert("Sale Processed & Cloud Synced!");
+        }
+
+        function addUdhaar() {
+            let name = document.getElementById('uName').value;
+            let phone = document.getElementById('uPhone').value;
+            let detail = document.getElementById('uDetail').value;
+            let amount = parseFloat(document.getElementById('uAmount').value);
+
+            if(!name || isNaN(amount)) return alert("Fill Name and Amount!");
+            udhaarLog.unshift({ name, phone, detail, amount, cleared: false });
+            syncToCloud();
+            alert("Udhaar Entry Saved!");
+        }
+
+        function clearUdhaar(idx) {
+            udhaarLog[idx].cleared = true;
+            syncToCloud();
+            alert("Khata Cleared!");
+        }
+
+        function addExpense() {
+            let detail = document.getElementById('expDetail').value;
+            let amount = parseFloat(document.getElementById('expAmount').value);
+
+            if(!detail || isNaN(amount)) return alert("Fill Expense Detail & Amount!");
+            expenseLog.unshift({ detail, amount, time: new Date().toLocaleTimeString() });
+            
+            document.getElementById('expDetail').value = '';
+            document.getElementById('expAmount').value = '';
+            
+            syncToCloud();
+            alert("Expense Saved!");
+        }
+
+        function deleteExpense(idx) {
+            if(!isAdmin) return alert("Only Admin can delete expenses!");
+            expenseLog.splice(idx, 1);
+            syncToCloud();
+        }
+
+        function addProduct() {
+            if(!isAdmin) return alert("Unlock Admin!");
+            products.push({
+                code: document.getElementById('pCode').value,
+                name: document.getElementById('pName').value,
+                cost: parseFloat(document.getElementById('pCost').value) || 0,
+                price: parseFloat(document.getElementById('pPrice').value),
+                qty: parseInt(document.getElementById('pQty').value)
+            });
+            syncToCloud();
+            alert("Product Added!");
+        }
+
+        function addJcTransaction() {
+            jcLog.unshift({
+                type: document.getElementById('jcType').value,
+                amount: parseFloat(document.getElementById('jcAmount').value),
+                phone: document.getElementById('jcPhone').value,
+                fee: parseFloat(document.getElementById('jcFee').value) || 0,
+                time: new Date().toLocaleTimeString()
+            });
+            syncToCloud();
+        }
+
+        function deleteProduct(idx) {
+            if(!isAdmin) return alert("Unlock Admin!");
+            products.splice(idx, 1);
+            syncToCloud();
+        }
+    </script>
+</body>
+</html>
