@@ -256,17 +256,29 @@
       font-weight: bold;
     }
 
+    .btn-edit {
+      background: #3182ce;
+      color: white;
+      border: none;
+      padding: 5px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      margin-right: 4px;
+    }
+
     .btn-remove {
       background: #e53e3e;
       color: white;
       border: none;
-      padding: 4px 8px;
+      padding: 5px 10px;
       border-radius: 4px;
       cursor: pointer;
+      font-size: 12px;
     }
 
     .cart-price-input, .cart-qty-input {
-      width: 75px;
+      width: 85px;
       padding: 5px;
       border: 1px solid #cbd5e0;
       border-radius: 4px;
@@ -393,6 +405,18 @@
       font-size: 12px;
     }
 
+    .vape-dropdown-item {
+      padding: 10px;
+      border-bottom: 1px solid #edf2f7;
+      cursor: pointer;
+      font-size: 13px;
+      transition: background 0.15s;
+    }
+    .vape-dropdown-item:hover, .vape-dropdown-item.selected {
+      background: #eef2ff !important;
+      color: #3730a3;
+    }
+
     @media screen and (max-width: 768px) {
       body { flex-direction: column; }
       .sidebar { width: 100%; padding: 15px; }
@@ -431,6 +455,7 @@
       <li class="nav-item active"><button onclick="switchTab(this, 'billing')">🛒 Billing Counter</button></li>
       <li class="nav-item"><button onclick="switchTab(this, 'stock-mgr')">📦 Stock & Accessories</button></li>
       <li class="nav-item"><button onclick="switchTab(this, 'vape')">💨 Vape & Refill Corner</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'vape-stocks')">🧪 E-Liquid Stocks</button></li>
       <li class="nav-item"><button onclick="switchTab(this, 'udhaar')">📖 Udhaar / Khata</button></li>
       <li class="nav-item"><button onclick="switchTab(this, 'banking')">💳 JazzCash / EasyPaisa</button></li>
       <li class="nav-item"><button onclick="switchTab(this, 'sales')">💵 Daily Sales & Cash</button></li>
@@ -484,7 +509,7 @@
                 <tr>
                   <th>Item</th>
                   <th>Sale Price</th>
-                  <th>Qty</th>
+                  <th>Qty / ml</th>
                   <th>Total</th>
                   <th>Remove</th>
                 </tr>
@@ -518,14 +543,15 @@
     <!-- 2. Stock / Accessories Manager Tab -->
     <div id="stock-mgr" class="tab-content">
       <div class="card-panel">
-        <h3>➕ Add New Item / Mobile Accessory to Stock</h3>
+        <h3 id="inv-form-title">➕ Add New Item / Mobile Accessory to Stock</h3>
         <div class="form-grid-4">
+          <input type="hidden" id="edit-inv-code-identifier" value="">
           <input type="text" id="inv-code" placeholder="Barcode / Code (e.g. 1001)">
           <input type="text" id="inv-name" placeholder="Item Name (e.g. Samsung 25W Charger)">
           <input type="number" id="inv-cost" placeholder="Purchase Cost (Rs.)">
           <input type="number" id="inv-price" placeholder="Sale Price (Rs.)">
           <input type="number" id="inv-qty" placeholder="Stock Qty">
-          <button class="btn-add-item" style="grid-column: span 5; padding: 10px;" onclick="addNewInventoryItem()">+ Save to Stock & Billing</button>
+          <button class="btn-add-item" id="inv-submit-btn" style="grid-column: span 5; padding: 10px;" onclick="addNewInventoryItem()">+ Save to Stock & Billing</button>
         </div>
       </div>
 
@@ -542,7 +568,7 @@
                 <th>Cost Price</th>
                 <th>Sale Price</th>
                 <th>Remaining Stock</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="full-inventory-list"></tbody>
@@ -551,47 +577,73 @@
       </div>
     </div>
 
-    <!-- 3. Vape & Refill Corner Tab -->
+    <!-- 3. Vape & Refill Corner Tab (Billing Only) -->
     <div id="vape" class="tab-content">
-      <div class="card-panel">
-        <h3>🧪 Select Flavor & Add to Bill (Press ENTER)</h3>
-        <div class="search-box">
-          <input type="text" id="vape-search-input" placeholder="Search flavor name and press ENTER to add to bill..." onkeyup="filterVapeProducts(event)">
+      <!-- 1. Custom ML Refill Counter -->
+      <div class="card-panel" style="border: 2px solid #2563eb;">
+        <h3 style="color: #2563eb;">⚡ Custom ML Refill Counter (Rate: Rs. 100 / ml)</h3>
+        <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">Flavor search karein, arrow keys ya enter se select karein, ml enter karein taake price khud ban jaye.</p>
+        
+        <div class="form-grid-4" style="grid-template-columns: 2fr 1fr 1fr auto;">
+          <input type="hidden" id="vape-selected-flavor-name" value="">
+          <div style="position: relative;">
+            <input type="text" id="vape-flavor-search" placeholder="🔍 Search Flavor..." oninput="filterVapeSearchDropdown()" onkeydown="handleVapeSearchKeydown(event)" autocomplete="off">
+            <div id="vape-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e0; border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+          </div>
+          <input type="number" id="vape-ml-qty" placeholder="Enter ml (e.g. 2.5)" step="0.1" min="0.1" oninput="calculateVapePrice()" onkeydown="handleCustomVapeEnter(event)">
+          <input type="number" id="vape-total-price" placeholder="Price (Rs.)" onkeydown="handleCustomVapeEnter(event)">
+          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addCustomVapeRefill()">+ Add to Bill</button>
         </div>
+        <div id="vape-selected-display" style="font-size: 13px; color: #2563eb; font-weight: 600; margin-top: 6px;"></div>
+      </div>
 
+      <!-- 2. Vape & Refill Corner - Current Bill Panel -->
+      <div class="card-panel" style="border: 2px dashed #3730a3;">
+        <h3 style="color: #3730a3;">🛒 Vape & Refill Corner - Current Bill</h3>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
-                <th>Flavor Name</th>
-                <th>Bottle Size</th>
-                <th>Remaining Stock</th>
+                <th>Flavor / Item</th>
                 <th>Price per ml</th>
-                <th>Action</th>
+                <th>Qty (ml)</th>
+                <th>Total</th>
+                <th>Remove</th>
               </tr>
             </thead>
-            <tbody id="vape-inventory-list"></tbody>
+            <tbody id="vape-cart-list"></tbody>
           </table>
         </div>
-      </div>
 
-      <div class="card-panel">
-        <h3>⚡ Custom ML Refill (Rate: Rs. 100 / ml)</h3>
-        <div class="form-grid-4">
-          <input type="text" id="vape-flavor-name" placeholder="Flavor Name (e.g. Vgod Cubano)" onkeydown="handleCustomVapeEnter(event)">
-          <input type="number" id="vape-ml-qty" placeholder="Quantity in ml" oninput="calculateVapePrice()" onkeydown="handleCustomVapeEnter(event)">
-          <input type="number" id="vape-total-price" placeholder="Total Price (Rs.)" onkeydown="handleCustomVapeEnter(event)">
-          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addCustomVapeRefill()">+ Add to Bill</button>
+        <div class="cart-summary">
+          <div class="summary-row">
+            <span>Subtotal:</span>
+            <span id="vape-subtotal">Rs. 0</span>
+          </div>
+          <div class="discount-box">
+            <label>Extra Discount (Rs.):</label>
+            <input type="number" id="vape-flat-discount" value="0" min="0" oninput="updateVapeCartUI()">
+          </div>
+          <div class="summary-row total">
+            <span>Grand Total:</span>
+            <span id="vape-grand-total">Rs. 0</span>
+          </div>
         </div>
-      </div>
 
+        <button class="btn-save-bill" style="background-color: #3730a3;" onclick="saveVapeBill()">💾 Save Vape Bill</button>
+      </div>
+    </div>
+
+    <!-- 4. E-Liquid Stocks & Tracking Manager Tab -->
+    <div id="vape-stocks" class="tab-content">
       <div class="card-panel">
-        <h3>➕ Add / Update Juice Stock</h3>
+        <h3 id="vape-form-title">➕ Add / Update Juice Stock</h3>
         <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
+          <input type="hidden" id="edit-vape-id-identifier" value="">
           <input type="text" id="new-flavor-name" placeholder="Flavor Name (e.g. Nasty Mango)">
           <input type="number" id="new-flavor-bottles" placeholder="Bottles Qty" step="0.1">
           <input type="number" id="new-flavor-mlperbottle" placeholder="Size ml (Default: 30)">
-          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addFlavorToStock()">Save Stock</button>
+          <button class="btn-add-item" id="vape-submit-btn" style="padding: 10px 15px;" onclick="addFlavorToStock()">Save Stock</button>
         </div>
       </div>
 
@@ -605,7 +657,7 @@
                 <th>Bottle Size</th>
                 <th>Total Remaining ML</th>
                 <th>Stock Breakdown</th>
-                <th>Action</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody id="vape-stock-list"></tbody>
@@ -614,7 +666,7 @@
       </div>
     </div>
 
-    <!-- 4. Udhaar / Khata Tab -->
+    <!-- 5. Udhaar / Khata Tab -->
     <div id="udhaar" class="tab-content">
       <div class="card-panel">
         <h3>📖 Professional Customer Udhaar / Khata Entry Form</h3>
@@ -649,7 +701,7 @@
       </div>
     </div>
 
-    <!-- 5. JazzCash / EasyPaisa Tab -->
+    <!-- 6. JazzCash / EasyPaisa Tab -->
     <div id="banking" class="tab-content">
       <div class="card-panel">
         <h3>💳 Mobile Account Transaction Form</h3>
@@ -692,7 +744,7 @@
       </div>
     </div>
 
-    <!-- 6. Daily Sales & Cash Tab -->
+    <!-- 7. Daily Sales & Cash Tab -->
     <div id="sales" class="tab-content">
       <div class="card-panel">
         <div class="sales-header">
@@ -731,7 +783,7 @@
       </div>
     </div>
 
-    <!-- 7. Shop Expenses Tab -->
+    <!-- 8. Shop Expenses Tab -->
     <div id="expenses" class="tab-content">
       <div class="card-panel">
         <h3>🧾 Add Shop Expense Entry</h3>
@@ -765,7 +817,7 @@
       </div>
     </div>
 
-    <!-- 8. Admin & Reports Tab -->
+    <!-- 9. Admin & Reports Tab -->
     <div id="admin" class="tab-content">
       <div class="sales-summary-grid">
         <div class="sales-card total">
@@ -797,7 +849,9 @@
 
   <script>
     let cart = [];
+    let vapeCart = [];
     let currentRole = null;
+    let selectedDropdownIndex = -1;
     let salesHistory = JSON.parse(localStorage.getItem('ali_mobiles_sales')) || [];
     
     let inventory = JSON.parse(localStorage.getItem('ali_mobiles_inventory')) || [
@@ -826,15 +880,23 @@
       renderFullInventory();
       renderSalesHistory();
       renderVapeStock();
-      renderVapeInventory();
+      renderVapeSearchDropdown('');
       renderUdhaar();
       renderBanking();
       renderExpenses();
       updateAdminReports();
+      updateVapeCartUI();
       
-      // Ensure login modal is active on load
       document.getElementById('login-overlay').style.display = 'flex';
       document.getElementById('login-pass').focus();
+
+      document.addEventListener('click', function(e) {
+        let searchBox = document.getElementById('vape-flavor-search');
+        let resultsBox = document.getElementById('vape-search-results');
+        if(searchBox && resultsBox && !searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
+          resultsBox.style.display = 'none';
+        }
+      });
     };
 
     function handleLoginEnter(event) {
@@ -852,7 +914,6 @@
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('display-user').innerText = role === 'admin' ? '👤 User: Admin' : '👤 User: Hamza';
         
-        // Hide Admin tab if logged in as normal user
         if(role !== 'admin') {
           document.getElementById('menu-admin-tab').style.display = 'none';
         } else {
@@ -921,6 +982,7 @@
     // --- Inventory & Accessories Functions ---
     function addNewInventoryItem() {
       if(!currentRole) { logoutSystem(); return; }
+      let editCodeId = document.getElementById('edit-inv-code-identifier').value.trim();
       let code = document.getElementById('inv-code').value.trim();
       let name = document.getElementById('inv-name').value.trim();
       let cost = parseFloat(document.getElementById('inv-cost').value);
@@ -932,14 +994,24 @@
         return;
       }
 
-      let existing = inventory.find(i => i.code === code);
-      if (existing) {
-        existing.name = name;
-        existing.cost = cost;
-        existing.price = price;
-        existing.qty += qty;
+      if (editCodeId !== '') {
+        let index = inventory.findIndex(i => i.code === editCodeId);
+        if (index !== -1) {
+          inventory[index] = { code, name, cost, price, qty };
+        }
+        document.getElementById('edit-inv-code-identifier').value = '';
+        document.getElementById('inv-form-title').innerText = '➕ Add New Item / Mobile Accessory to Stock';
+        document.getElementById('inv-submit-btn').innerText = '+ Save to Stock & Billing';
       } else {
-        inventory.push({ code, name, cost, price, qty });
+        let existing = inventory.find(i => i.code === code);
+        if (existing) {
+          existing.name = name;
+          existing.cost = cost;
+          existing.price = price;
+          existing.qty += qty;
+        } else {
+          inventory.push({ code, name, cost, price, qty });
+        }
       }
 
       localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
@@ -952,7 +1024,26 @@
       document.getElementById('inv-price').value = '';
       document.getElementById('inv-qty').value = '';
 
-      alert('Accessory successfully added to stock & billing!');
+      alert('Accessory stock successfully updated!');
+    }
+
+    function editInventoryItem(code) {
+      if(!currentRole) { logoutSystem(); return; }
+      let item = inventory.find(i => i.code === code);
+      if(!item) return;
+
+      document.getElementById('edit-inv-code-identifier').value = item.code;
+      document.getElementById('inv-code').value = item.code;
+      document.getElementById('inv-name').value = item.name;
+      document.getElementById('inv-cost').value = item.cost;
+      document.getElementById('inv-price').value = item.price;
+      document.getElementById('inv-qty').value = item.qty;
+
+      document.getElementById('inv-form-title').innerText = '✏️ Edit Accessory Item: ' + item.name;
+      document.getElementById('inv-submit-btn').innerText = '💾 Update Accessory';
+      
+      switchTab(document.querySelectorAll('.nav-menu li button')[1], 'stock-mgr');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderInventory() {
@@ -986,7 +1077,10 @@
             <td>Rs. ${item.cost}</td>
             <td>Rs. ${item.price}</td>
             <td><span class="stock-badge">${item.qty} Pcs</span></td>
-            <td><button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button></td>
+            <td>
+              <button class="btn-edit" onclick="editInventoryItem('${item.code}')">Edit</button>
+              <button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button>
+            </td>
           </tr>
         `;
       });
@@ -1035,12 +1129,31 @@
     // --- Cart & Billing Functions ---
     function addToCart(code, name, originalPrice, category = 'mobile', mlUsed = 0) {
       if(!currentRole) { logoutSystem(); return; }
-      if(category === 'mobile') {
-        let stockItem = inventory.find(i => i.code === code);
-        if(stockItem && stockItem.qty <= 0) {
-          alert('Yeh item stock mein khatam ho chuki hai!');
-          return;
+
+      if(category === 'vape') {
+        let existingVapeItem = vapeCart.find(item => item.code === code);
+        let addedMl = Number((mlUsed > 0 ? mlUsed : 1).toFixed(1));
+        if (existingVapeItem) {
+          existingVapeItem.mlUsed = Number((existingVapeItem.mlUsed + addedMl).toFixed(1));
+          existingVapeItem.salePrice = Number((existingVapeItem.mlUsed * 100).toFixed(1)); // Rate Rs. 100 per ml
+        } else {
+          vapeCart.push({ 
+            code: code, 
+            name: name, 
+            salePrice: Number((addedMl * 100).toFixed(1)), 
+            qty: 1, 
+            category: category,
+            mlUsed: addedMl
+          });
         }
+        updateVapeCartUI();
+        return;
+      }
+
+      let stockItem = inventory.find(i => i.code === code);
+      if(stockItem && stockItem.qty <= 0) {
+        alert('Yeh item stock mein khatam ho chuki hai!');
+        return;
       }
 
       let existingItem = cart.find(item => item.code === code);
@@ -1071,7 +1184,7 @@
     function updateItemQty(code, newQty) {
       let item = cart.find(i => i.code === code);
       if (item) {
-        item.qty = parseInt(newQty) || 1;
+        item.qty = parseFloat(newQty) || 1;
         updateCartUI();
       }
     }
@@ -1083,6 +1196,7 @@
 
     function updateCartUI() {
       let cartBody = document.getElementById('cart-list');
+      if(!cartBody) return;
       cartBody.innerHTML = '';
       let subtotal = 0;
 
@@ -1098,10 +1212,10 @@
                      onchange="updateItemPrice('${item.code}', this.value)">
             </td>
             <td>
-              <input type="number" class="cart-qty-input" value="${item.qty}" min="1" 
+              <input type="number" class="cart-qty-input" value="${item.qty}" min="0.1" step="0.1"
                      onchange="updateItemQty('${item.code}', this.value)">
             </td>
-            <td>Rs. ${itemTotal}</td>
+            <td>Rs. ${itemTotal.toFixed(1)}</td>
             <td><button class="btn-remove" onclick="removeFromCart('${item.code}')">X</button></td>
           </tr>
         `;
@@ -1111,8 +1225,8 @@
       let grandTotal = subtotal - extraDiscount;
       if (grandTotal < 0) grandTotal = 0;
 
-      document.getElementById('subtotal').innerText = 'Rs. ' + subtotal;
-      document.getElementById('grand-total').innerText = 'Rs. ' + grandTotal;
+      document.getElementById('subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
+      document.getElementById('grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
     }
 
     function saveBill() {
@@ -1128,21 +1242,12 @@
           if(stockItem) {
             stockItem.qty = Math.max(0, stockItem.qty - item.qty);
           }
-        } else if(item.category === 'vape' && item.mlUsed > 0) {
-          let totalMlDeduct = item.mlUsed * item.qty;
-          let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
-          if(matchedStock) {
-            matchedStock.totalMl = Math.max(0, matchedStock.totalMl - totalMlDeduct);
-          }
         }
       });
 
       localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
-      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
       renderInventory();
       renderFullInventory();
-      renderVapeStock();
-      renderVapeInventory();
 
       let subtotal = cart.reduce((sum, i) => sum + (i.salePrice * i.qty), 0);
       let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
@@ -1152,15 +1257,11 @@
       let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
       let itemsSummary = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
 
-      let hasVape = cart.some(i => i.category === 'vape');
-      let hasMobile = cart.some(i => i.category === 'mobile');
-      let billCategory = (hasVape && hasMobile) ? 'mixed' : (hasVape ? 'vape' : 'mobile');
-
       salesHistory.unshift({
         time: currentTime,
         items: itemsSummary,
         amount: grandTotal,
-        category: billCategory,
+        category: 'mobile',
         cartDetails: cart
       });
 
@@ -1168,7 +1269,7 @@
       renderSalesHistory();
       updateAdminReports();
 
-      alert('Bill Saved Successfully!\nDaily Sales Recorded: Rs. ' + grandTotal);
+      alert('Bill Saved Successfully!\nDaily Sales Recorded: Rs. ' + grandTotal.toFixed(1));
       
       cart = [];
       document.getElementById('flat-discount').value = 0;
@@ -1176,9 +1277,201 @@
     }
 
     // --- Vape & Refill Functions ---
+    function updateVapeItemMl(code, newMl) {
+      let item = vapeCart.find(i => i.code === code);
+      if (item) {
+        let val = Number((parseFloat(newMl) || 1).toFixed(1));
+        item.mlUsed = val;
+        item.salePrice = Number((val * 100).toFixed(1)); // Recalculate based on Rs. 100 per ml rate
+        updateVapeCartUI();
+      }
+    }
+
+    function removeFromVapeCart(code) {
+      vapeCart = vapeCart.filter(item => item.code !== code);
+      updateVapeCartUI();
+    }
+
+    function updateVapeCartUI() {
+      let cartBody = document.getElementById('vape-cart-list');
+      if(!cartBody) return;
+      cartBody.innerHTML = '';
+      let subtotal = 0;
+
+      vapeCart.forEach(item => {
+        let itemTotal = item.salePrice; 
+        subtotal += itemTotal;
+
+        cartBody.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td>Rs. 100</td>
+            <td>
+              <input type="number" class="cart-qty-input" value="${item.mlUsed}" min="0.1" step="0.1"
+                     onchange="updateVapeItemMl('${item.code}', this.value)"> ml
+            </td>
+            <td>Rs. ${itemTotal.toFixed(1)}</td>
+            <td><button class="btn-remove" onclick="removeFromVapeCart('${item.code}')">X</button></td>
+          </tr>
+        `;
+      });
+
+      let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
+      let grandTotal = subtotal - extraDiscount;
+      if (grandTotal < 0) grandTotal = 0;
+
+      document.getElementById('vape-subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
+      document.getElementById('vape-grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
+    }
+
+    function saveVapeBill() {
+      if(!currentRole) { logoutSystem(); return; }
+      if (vapeCart.length === 0) {
+        alert('Vape Cart khali hai! Pehle flavors add karein.');
+        return;
+      }
+
+      vapeCart.forEach(item => {
+        let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
+        if(matchedStock) {
+          matchedStock.totalMl = Number(Math.max(0, matchedStock.totalMl - item.mlUsed).toFixed(1));
+        }
+      });
+
+      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
+      renderVapeStock();
+      renderVapeSearchDropdown('');
+
+      let subtotal = vapeCart.reduce((sum, i) => sum + i.salePrice, 0);
+      let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
+      let grandTotal = subtotal - extraDiscount;
+      if (grandTotal < 0) grandTotal = 0;
+
+      let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let itemsSummary = vapeCart.map(i => `${i.name} (${i.mlUsed}ml)`).join(', ');
+
+      salesHistory.unshift({
+        time: currentTime,
+        items: itemsSummary,
+        amount: grandTotal,
+        category: 'vape',
+        cartDetails: vapeCart
+      });
+
+      localStorage.setItem('ali_mobiles_sales', JSON.stringify(salesHistory));
+      renderSalesHistory();
+      updateAdminReports();
+
+      alert('Vape Bill Saved Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
+      
+      vapeCart = [];
+      document.getElementById('vape-flat-discount').value = 0;
+      updateVapeCartUI();
+    }
+
+    function filterVapeSearchDropdown() {
+      let query = document.getElementById('vape-flavor-search').value.toLowerCase().trim();
+      selectedDropdownIndex = -1;
+      renderVapeSearchDropdown(query);
+      document.getElementById('vape-search-results').style.display = 'block';
+    }
+
+    function renderVapeSearchDropdown(query) {
+      let resultsBox = document.getElementById('vape-search-results');
+      if(!resultsBox) return;
+      resultsBox.innerHTML = '';
+
+      let filtered = vapeStock.filter(item => item.name.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        resultsBox.innerHTML = '<div style="padding: 10px; font-size: 13px; color: #a0aec0;">Koi flavor nahi mila</div>';
+        return;
+      }
+
+      filtered.forEach((item, index) => {
+        let bottles = Math.floor(item.totalMl / item.bottleSize);
+        let remMl = Number((item.totalMl % item.bottleSize).toFixed(1));
+        let breakdown = `${bottles} Bottle(s) & ${remMl} ml`;
+
+        let div = document.createElement('div');
+        div.className = 'vape-dropdown-item';
+        div.setAttribute('data-index', index);
+        div.setAttribute('data-name', item.name);
+        div.setAttribute('data-ml', item.totalMl);
+        
+        div.innerHTML = `
+          <div style="font-weight: bold; color: #2d3748;">${item.name}</div>
+          <div style="font-size: 11px; color: #718096; margin-top: 2px;">
+            Size: ${item.bottleSize}ml | Available: <span style="color: #276749; font-weight: bold;">${item.totalMl.toFixed(1)} ml</span> (${breakdown})
+          </div>
+        `;
+
+        div.onclick = function() {
+          selectVapeFlavor(item.name, item.totalMl);
+        };
+
+        resultsBox.appendChild(div);
+      });
+    }
+
+    function handleVapeSearchKeydown(event) {
+      let resultsBox = document.getElementById('vape-search-results');
+      let items = resultsBox ? resultsBox.querySelectorAll('.vape-dropdown-item') : [];
+
+      if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (items.length > 0) {
+          selectedDropdownIndex = (selectedDropdownIndex + 1) % items.length;
+          updateDropdownHighlight(items);
+        }
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (items.length > 0) {
+          selectedDropdownIndex = (selectedDropdownIndex - 1 + items.length) % items.length;
+          updateDropdownHighlight(items);
+        }
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        if (selectedDropdownIndex >= 0 && selectedDropdownIndex < items.length) {
+          let selected = items[selectedDropdownIndex];
+          selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
+        } else if (items.length > 0) {
+          let selected = items[0];
+          selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
+        }
+      }
+    }
+
+    function updateDropdownHighlight(items) {
+      items.forEach((item, idx) => {
+        if (idx === selectedDropdownIndex) {
+          item.classList.add('selected');
+          item.scrollIntoView({ block: 'nearest' });
+        } else {
+          item.classList.remove('selected');
+        }
+      });
+    }
+
+    function selectVapeFlavor(flavorName, availableMl) {
+      document.getElementById('vape-flavor-search').value = flavorName;
+      document.getElementById('vape-selected-flavor-name').value = flavorName;
+      document.getElementById('vape-search-results').style.display = 'none';
+
+      document.getElementById('vape-selected-display').innerText = `✅ Selected Flavor: ${flavorName} (Stock Available: ${availableMl.toFixed(1)} ml)`;
+      
+      let mlInput = document.getElementById('vape-ml-qty');
+      if(!mlInput.value || parseFloat(mlInput.value) <= 0) {
+        mlInput.value = '1';
+      }
+      calculateVapePrice();
+      mlInput.focus();
+      mlInput.select();
+    }
+
     function calculateVapePrice() {
       let mlQty = parseFloat(document.getElementById('vape-ml-qty').value) || 0;
-      document.getElementById('vape-total-price').value = mlQty * 100;
+      document.getElementById('vape-total-price').value = (mlQty * 100).toFixed(1);
     }
 
     function handleCustomVapeEnter(event) {
@@ -1190,58 +1483,99 @@
 
     function addCustomVapeRefill() {
       if(!currentRole) { logoutSystem(); return; }
-      let name = document.getElementById('vape-flavor-name').value.trim();
-      let ml = parseFloat(document.getElementById('vape-ml-qty').value);
+      let flavorName = document.getElementById('vape-selected-flavor-name').value.trim();
+      if(!flavorName) {
+        flavorName = document.getElementById('vape-flavor-search').value.trim();
+      }
+      let ml = Number((parseFloat(document.getElementById('vape-ml-qty').value) || 0).toFixed(1));
       let price = parseFloat(document.getElementById('vape-total-price').value);
 
-      if (!name || isNaN(ml) || isNaN(price)) {
-        alert('Flavor name aur ML quantity enter karein!');
+      if (!flavorName || isNaN(ml) || ml <= 0 || isNaN(price)) {
+        alert('Baraye meharbani list ya search se flavor select karein aur valid ML quantity enter karein!');
         return;
       }
 
-      let itemCode = 'CUSTOM-RF-' + Date.now().toString().slice(-4);
-      let fullName = `${name} (${ml}ml Refill)`;
+      let matchedStock = vapeStock.find(s => s.name.toLowerCase() === flavorName.toLowerCase());
+      if(matchedStock && ml > matchedStock.totalMl) {
+        alert(`Warning: Aap sirf ${matchedStock.totalMl.toFixed(1)} ml tak refill kar sakte hain, stock kam hai!`);
+      }
+
+      let itemCode = 'VAPE-RF-' + Date.now().toString().slice(-4);
+      let fullName = `${flavorName} (${ml}ml Refill)`;
 
       addToCart(itemCode, fullName, price, 'vape', ml);
 
-      document.getElementById('vape-flavor-name').value = '';
+      document.getElementById('vape-flavor-search').value = '';
+      document.getElementById('vape-selected-flavor-name').value = '';
       document.getElementById('vape-ml-qty').value = '';
       document.getElementById('vape-total-price').value = '';
+      document.getElementById('vape-selected-display').innerText = '';
+      document.getElementById('vape-flavor-search').focus();
     }
 
     function addFlavorToStock() {
       if(!currentRole) { logoutSystem(); return; }
+      let editId = document.getElementById('edit-vape-id-identifier').value.trim();
       let name = document.getElementById('new-flavor-name').value.trim();
       let bottles = parseFloat(document.getElementById('new-flavor-bottles').value);
       let bottleSize = parseFloat(document.getElementById('new-flavor-mlperbottle').value) || 30;
 
-      if (!name || isNaN(bottles) || bottles <= 0) {
+      if (!name || isNaN(bottles) || bottles < 0) {
         alert('Valid Flavor Name aur Bottle Quantity enter karein!');
         return;
       }
 
-      let addedMl = bottles * bottleSize;
-      let existing = vapeStock.find(item => item.name.toLowerCase() === name.toLowerCase());
+      let addedMl = Number((bottles * bottleSize).toFixed(1));
 
-      if (existing) {
-        existing.totalMl += addedMl;
+      if (editId !== '') {
+        let item = vapeStock.find(i => i.id === editId);
+        if (item) {
+          item.name = name;
+          item.bottleSize = bottleSize;
+          item.totalMl = addedMl;
+        }
+        document.getElementById('edit-vape-id-identifier').value = '';
+        document.getElementById('vape-form-title').innerText = '➕ Add / Update Juice Stock';
+        document.getElementById('vape-submit-btn').innerText = 'Save Stock';
       } else {
-        vapeStock.push({
-          id: Date.now().toString(),
-          name: name,
-          bottleSize: bottleSize,
-          totalMl: addedMl
-        });
+        let existing = vapeStock.find(item => item.name.toLowerCase() === name.toLowerCase());
+        if (existing) {
+          existing.totalMl = Number((existing.totalMl + addedMl).toFixed(1));
+        } else {
+          vapeStock.push({
+            id: Date.now().toString(),
+            name: name,
+            bottleSize: bottleSize,
+            totalMl: addedMl
+          });
+        }
       }
 
       localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
       renderVapeStock();
-      renderVapeInventory();
+      renderVapeSearchDropdown('');
 
       document.getElementById('new-flavor-name').value = '';
       document.getElementById('new-flavor-bottles').value = '';
       document.getElementById('new-flavor-mlperbottle').value = '';
-      alert('Juice stock updated successfully!');
+      alert('Vape stock successfully updated!');
+    }
+
+    function editVapeStock(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      let item = vapeStock.find(i => i.id === id);
+      if(!item) return;
+
+      document.getElementById('edit-vape-id-identifier').value = item.id;
+      document.getElementById('new-flavor-name').value = item.name;
+      document.getElementById('new-flavor-bottles').value = (item.totalMl / item.bottleSize).toFixed(1);
+      document.getElementById('new-flavor-mlperbottle').value = item.bottleSize;
+
+      document.getElementById('vape-form-title').innerText = '✏️ Edit Flavor Stock: ' + item.name;
+      document.getElementById('vape-submit-btn').innerText = '💾 Update Flavor Stock';
+      
+      switchTab(document.querySelectorAll('.nav-menu li button')[3], 'vape-stocks');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
 
     function renderVapeStock() {
@@ -1251,17 +1585,17 @@
 
       vapeStock.forEach(item => {
         let bottles = Math.floor(item.totalMl / item.bottleSize);
-        let remMl = item.totalMl % item.bottleSize;
-        let breakdownText = `${bottles} Bottle(s) & ${remMl.toFixed(0)} ml`;
+        let remMl = Number((item.totalMl % item.bottleSize).toFixed(1));
+        let breakdownText = `${bottles} Bottle(s) & ${remMl} ml`;
 
         stockBody.innerHTML += `
           <tr>
             <td><strong>${item.name}</strong></td>
             <td>${item.bottleSize} ml</td>
-            <td>${item.totalMl} ml</td>
+            <td>${item.totalMl.toFixed(1)} ml</td>
             <td><span class="stock-badge">${breakdownText}</span></td>
             <td>
-              <button class="btn-add-item" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;" onclick="selectStockForRefill('${item.name}')">+ Refill</button>
+              <button class="btn-edit" onclick="editVapeStock('${item.id}')">Edit</button>
               <button class="btn-remove" onclick="deleteVapeStock('${item.id}')">Delete</button>
             </td>
           </tr>
@@ -1275,67 +1609,8 @@
         vapeStock = vapeStock.filter(i => i.id !== id);
         localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
         renderVapeStock();
-        renderVapeInventory();
+        renderVapeSearchDropdown('');
       }
-    }
-
-    function renderVapeInventory() {
-      let invBody = document.getElementById('vape-inventory-list');
-      if(!invBody) return;
-      invBody.innerHTML = '';
-
-      vapeStock.forEach(item => {
-        let bottles = Math.floor(item.totalMl / item.bottleSize);
-        let remMl = item.totalMl % item.bottleSize;
-        let breakdownText = `${bottles} Bottle(s) & ${remMl.toFixed(0)} ml`;
-
-        invBody.innerHTML += `
-          <tr data-name="${item.name.toLowerCase()}">
-            <td><strong>${item.name}</strong></td>
-            <td>${item.bottleSize} ml</td>
-            <td><span class="stock-badge">${breakdownText}</span></td>
-            <td>Rs. 100 / ml</td>
-            <td><button class="btn-add-item" onclick="addFlavorQuickCart('${item.name}')">+ Add 10ml (Rs. 1000)</button></td>
-          </tr>
-        `;
-      });
-    }
-
-    function filterVapeProducts(event) {
-      let inputVal = document.getElementById('vape-search-input').value.toLowerCase().trim();
-      let rows = document.querySelectorAll('#vape-inventory-list tr');
-      let visibleRows = [];
-
-      rows.forEach(row => {
-        let text = row.innerText.toLowerCase();
-        if (text.includes(inputVal)) {
-          row.style.display = '';
-          visibleRows.push(row);
-        } else {
-          row.style.display = 'none';
-        }
-      });
-
-      if (event.key === 'Enter' && inputVal !== '') {
-        if (visibleRows.length > 0) {
-          let topRow = visibleRows[0];
-          let flavorName = topRow.querySelector('strong').innerText;
-          addFlavorQuickCart(flavorName, 10, 1000);
-          document.getElementById('vape-search-input').value = '';
-          filterVapeProducts({ key: '' });
-        }
-      }
-    }
-
-    function addFlavorQuickCart(flavorName, defaultMl = 10, defaultPrice = 1000) {
-      let itemCode = 'VAPE-' + Date.now().toString().slice(-4);
-      let fullName = `${flavorName} (${defaultMl}ml Refill)`;
-      addToCart(itemCode, fullName, defaultPrice, 'vape', defaultMl);
-    }
-
-    function selectStockForRefill(flavorName) {
-      document.getElementById('vape-flavor-name').value = flavorName;
-      document.getElementById('vape-ml-qty').focus();
     }
 
     // --- Udhaar Functions ---
@@ -1487,7 +1762,7 @@
 
         if (sale.cartDetails && Array.isArray(sale.cartDetails)) {
           sale.cartDetails.forEach(item => {
-            let itemTotal = item.salePrice * item.qty;
+            let itemTotal = item.category === 'vape' ? item.salePrice : (item.salePrice * item.qty);
             if (item.category === 'vape') vapeTotal += itemTotal;
             else mobileTotal += itemTotal;
           });
@@ -1505,14 +1780,14 @@
             <td>${sale.time}</td>
             <td>${badgeHtml}</td>
             <td>${sale.items}</td>
-            <td><strong>Rs. ${sale.amount}</strong></td>
+            <td><strong>Rs. ${sale.amount.toFixed(1)}</strong></td>
           </tr>
         `;
       });
 
-      document.getElementById('total-daily-cash').innerText = 'Rs. ' + totalCash;
-      document.getElementById('vape-daily-cash').innerText = 'Rs. ' + vapeTotal;
-      document.getElementById('mobile-daily-cash').innerText = 'Rs. ' + mobileTotal;
+      document.getElementById('total-daily-cash').innerText = 'Rs. ' + totalCash.toFixed(1);
+      document.getElementById('vape-daily-cash').innerText = 'Rs. ' + vapeTotal.toFixed(1);
+      document.getElementById('mobile-daily-cash').innerText = 'Rs. ' + mobileTotal.toFixed(1);
     }
 
     function clearSalesHistory() {
@@ -1593,9 +1868,9 @@
       let elProfit = document.getElementById('admin-net-profit');
       let elUdhaar = document.getElementById('admin-total-udhaar');
 
-      if(elSales) elSales.innerText = 'Rs. ' + totalSales;
-      if(elExp) elExp.innerText = 'Rs. ' + totalExpenses;
-      if(elProfit) elProfit.innerText = 'Rs. ' + netProfit;
+      if(elSales) elSales.innerText = 'Rs. ' + totalSales.toFixed(1);
+      if(elExp) elExp.innerText = 'Rs. ' + totalExpenses.toFixed(1);
+      if(elProfit) elProfit.innerText = 'Rs. ' + netProfit.toFixed(1);
       if(elUdhaar) elUdhaar.innerText = 'Rs. ' + totalUdhaar;
     }
   </script>
