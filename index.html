@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ALI MOBILES - Cloud Secured POS</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     * {
       box-sizing: border-box;
@@ -20,7 +19,66 @@
       color: #333;
     }
 
-    /* Sidebar Layout */
+    /* Login Overlay Styling */
+    #login-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(15, 23, 42, 0.95);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+
+    .login-box {
+      background: #ffffff;
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+
+    .login-box h2 {
+      color: #1a253f;
+      margin-bottom: 5px;
+    }
+
+    .login-box p {
+      color: #64748b;
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .login-box select, .login-box input {
+      width: 100%;
+      padding: 10px;
+      margin-bottom: 12px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 14px;
+      outline: none;
+    }
+
+    .btn-login {
+      width: 100%;
+      background-color: #2563eb;
+      color: white;
+      border: none;
+      padding: 12px;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .btn-login:hover {
+      background-color: #1d4ed8;
+    }
+
     .sidebar {
       width: 250px;
       background-color: #1a253f;
@@ -35,15 +93,12 @@
       color: #38ef7d;
       font-size: 20px;
       margin-bottom: 10px;
-      display: flex;
-      align-items: center;
-      gap: 10px;
     }
 
     .user-info {
       font-size: 13px;
       color: #a0aec0;
-      margin-bottom: 25px;
+      margin-bottom: 20px;
       border-bottom: 1px solid #2d3748;
       padding-bottom: 15px;
     }
@@ -57,24 +112,26 @@
       list-style: none;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 6px;
     }
 
-    .nav-menu li a {
+    .nav-menu li button {
+      width: 100%;
+      text-align: left;
+      background: none;
+      border: none;
       color: #cbd5e0;
-      text-decoration: none;
-      padding: 12px 15px;
+      padding: 10px 15px;
       border-radius: 6px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
       font-size: 14px;
-      transition: background 0.3s;
+      cursor: pointer;
+      transition: background 0.2s, color 0.2s;
     }
 
-    .nav-menu li.active a, .nav-menu li a:hover {
+    .nav-menu li.active button, .nav-menu li button:hover {
       background-color: #2563eb;
       color: #fff;
+      font-weight: 600;
     }
 
     .sidebar-footer {
@@ -104,7 +161,6 @@
       cursor: pointer;
     }
 
-    /* Main Content Layout */
     .main-content {
       flex: 1;
       padding: 25px;
@@ -127,42 +183,17 @@
       font-size: 14px;
     }
 
-    /* Stats Grid */
-    .stats-grid {
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .billing-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-      border-left: 5px solid #cbd5e0;
-    }
-
-    .stat-card.sales { border-left-color: #38ef7d; }
-    .stat-card.expenses { border-left-color: #e53e3e; }
-    .stat-card.profit { border-left-color: #3182ce; }
-    .stat-card.udhaar { border-left-color: #dd6b20; }
-
-    .stat-card h4 {
-      font-size: 13px;
-      color: #718096;
-      margin-bottom: 8px;
-    }
-
-    .stat-card h2 {
-      font-size: 22px;
-      color: #2d3748;
-    }
-
-    /* Content Layout Grid */
-    .content-grid {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
+      grid-template-columns: 1.5fr 1fr;
       gap: 20px;
     }
 
@@ -170,7 +201,8 @@
       background: #fff;
       padding: 20px;
       border-radius: 10px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      margin-bottom: 20px;
     }
 
     .card-panel h3 {
@@ -178,7 +210,20 @@
       color: #2d3748;
     }
 
-    /* Table Styles */
+    .search-box {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 15px;
+    }
+
+    .search-box input {
+      flex: 1;
+      padding: 10px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      outline: none;
+    }
+
     .table-responsive {
       width: 100%;
       overflow-x: auto;
@@ -191,7 +236,7 @@
     }
 
     th, td {
-      padding: 12px;
+      padding: 10px;
       border-bottom: 1px solid #edf2f7;
       font-size: 14px;
     }
@@ -201,201 +246,1358 @@
       color: #4a5568;
     }
 
-    /* Form Styles */
-    .form-group {
-      margin-bottom: 12px;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 13px;
-      color: #4a5568;
-      margin-bottom: 5px;
-    }
-
-    .form-group input {
-      width: 100%;
-      padding: 10px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      outline: none;
-    }
-
-    .btn-add {
-      width: 100%;
-      background-color: #38ef7d;
+    .btn-add-item {
+      background: #38ef7d;
       color: #0f5132;
       border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: bold;
+      padding: 6px 12px;
+      border-radius: 4px;
       cursor: pointer;
-      margin-top: 10px;
+      font-weight: bold;
     }
 
-    /* ======================================= */
-    /* MOBILE RESPONSIVE STYLES (Max Width 768px) */
-    /* ======================================= */
+    .btn-remove {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .cart-price-input, .cart-qty-input {
+      width: 75px;
+      padding: 5px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+      text-align: center;
+    }
+
+    .cart-summary {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 15px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .summary-row.total {
+      font-size: 18px;
+      font-weight: bold;
+      color: #1a253f;
+      border-top: 2px solid #cbd5e0;
+      padding-top: 8px;
+      margin-top: 8px;
+    }
+
+    .discount-box {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 10px 0;
+    }
+
+    .discount-box input {
+      width: 100px;
+      padding: 6px;
+      border: 1px solid #cbd5e0;
+      border-radius: 4px;
+    }
+
+    .btn-save-bill {
+      width: 100%;
+      background-color: #2563eb;
+      color: #ffffff;
+      border: none;
+      padding: 14px;
+      border-radius: 6px;
+      font-weight: bold;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
+
+    .form-grid-4 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
+      gap: 10px;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .form-grid-4 input, .form-grid-4 select {
+      padding: 9px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+    }
+
+    .sales-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+
+    .sales-summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .sales-card {
+      padding: 15px;
+      border-radius: 8px;
+      font-weight: bold;
+    }
+
+    .sales-card.total { background: #38ef7d; color: #0f5132; font-size: 18px; }
+    .sales-card.vape { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+    .sales-card.mobile { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+    .sales-card.expense { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+
+    .sales-card div {
+      font-size: 13px;
+      font-weight: normal;
+      margin-bottom: 4px;
+    }
+
+    .badge-vape { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-mobile { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-status-pending { background: #feebc8; color: #744210; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+    .badge-status-paid { background: #c6f6d5; color: #22543d; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+
+    .btn-clear-sales {
+      background: #e53e3e;
+      color: white;
+      border: none;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .stock-badge {
+      background: #feebc8;
+      color: #744210;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
     @media screen and (max-width: 768px) {
-      body {
-        flex-direction: column;
-      }
-
-      .sidebar {
-        width: 100%;
-        padding: 15px;
-      }
-
-      .nav-menu {
-        flex-direction: row;
-        flex-wrap: wrap;
-        gap: 5px;
-      }
-
-      .nav-menu li {
-        flex: 1 1 calc(50% - 10px);
-      }
-
-      .nav-menu li a {
-        padding: 8px 10px;
-        font-size: 12px;
-      }
-
-      .sidebar-footer {
-        flex-direction: row;
-        margin-top: 15px;
-      }
-
-      .sidebar-footer button {
-        flex: 1;
-      }
-
-      .main-content {
-        padding: 15px;
-      }
-
-      .top-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 10px;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-        gap: 10px;
-      }
-
-      .content-grid {
-        grid-template-columns: 1fr;
-      }
+      body { flex-direction: column; }
+      .sidebar { width: 100%; padding: 15px; }
+      .nav-menu { flex-direction: row; flex-wrap: wrap; gap: 5px; }
+      .nav-menu li { flex: 1 1 calc(50% - 10px); }
+      .billing-grid { grid-template-columns: 1fr; }
+      .form-grid-4 { grid-template-columns: 1fr; }
     }
   </style>
 </head>
 <body>
 
+  <!-- Login Modal Overlay -->
+  <div id="login-overlay">
+    <div class="login-box">
+      <h2>🏪 ALI MOBILES</h2>
+      <p>Secure POS Login Portal</p>
+      <select id="login-role">
+        <option value="user">User (Hamza)</option>
+        <option value="admin">Admin</option>
+      </select>
+      <input type="password" id="login-pass" placeholder="Enter Password..." onkeydown="handleLoginEnter(event)">
+      <button class="btn-login" onclick="validateLogin()">Login to POS</button>
+    </div>
+  </div>
+
   <!-- Sidebar -->
   <div class="sidebar">
-    <h2><i class="fa-solid fa-store"></i> ALI MOBILES</h2>
+    <h2>🏪 ALI MOBILES</h2>
     <div class="user-info">
-      <div><i class="fa-solid fa-user"></i> User: Hamza</div>
-      <span><i class="fa-solid fa-cloud"></i> Shift: 1 PM - 1:30 AM</span>
+      <div id="display-user">👤 User: Not Logged In</div>
+      <span>☁️ Shift: 1 PM - 1:30 AM</span>
     </div>
     
     <ul class="nav-menu">
-      <li class="active"><a href="#"><i class="fa-solid fa-cart-shopping"></i> Billing Counter</a></li>
-      <li><a href="#"><i class="fa-solid fa-book"></i> Udhaar / Khata</a></li>
-      <li><a href="#"><i class="fa-solid fa-wallet"></i> JazzCash / EasyPaisa</a></li>
-      <li><a href="#"><i class="fa-solid fa-cash-register"></i> Daily Sales & Cash</a></li>
-      <li><a href="#"><i class="fa-solid fa-receipt"></i> Shop Expenses</a></li>
-      <li><a href="#"><i class="fa-solid fa-chart-line"></i> Admin & Reports</a></li>
+      <li class="nav-item active"><button onclick="switchTab(this, 'billing')">🛒 Billing Counter</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'stock-mgr')">📦 Stock & Accessories</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'vape')">💨 Vape & Refill Corner</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'udhaar')">📖 Udhaar / Khata</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'banking')">💳 JazzCash / EasyPaisa</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'sales')">💵 Daily Sales & Cash</button></li>
+      <li class="nav-item"><button onclick="switchTab(this, 'expenses')">🧾 Shop Expenses</button></li>
+      <li class="nav-item" id="menu-admin-tab"><button onclick="switchTab(this, 'admin')">📊 Admin & Reports</button></li>
     </ul>
 
     <div class="sidebar-footer">
-      <button class="btn-admin">Admin Locked</button>
-      <button class="btn-password"><i class="fa-solid fa-key"></i> Change Password</button>
+      <button class="btn-admin" onclick="logoutSystem()">🔒 Logout / Lock System</button>
+      <button class="btn-password" onclick="changePasswordPrompt()">🔑 Change Password</button>
     </div>
   </div>
 
   <!-- Main Content -->
   <div class="main-content">
     <div class="top-header">
-      <h1>Billing Counter</h1>
-      <div class="date-badge"><i class="fa-regular fa-calendar"></i> Business Date: 2026-08-11</div>
+      <h1 id="page-title">Billing Counter</h1>
+      <div class="date-badge">📅 Business Date: 2026-08-11</div>
     </div>
 
-    <!-- Stats Row -->
-    <div class="stats-grid">
-      <div class="stat-card sales">
-        <h4>Monthly Sales Total</h4>
-        <h2>Rs. 0</h2>
-      </div>
-      <div class="stat-card expenses">
-        <h4>Monthly Expenses</h4>
-        <h2>Rs. 0</h2>
-      </div>
-      <div class="stat-card profit">
-        <h4>Net Estimated Profit</h4>
-        <h2>Rs. 0</h2>
-      </div>
-      <div class="stat-card udhaar">
-        <h4>Total Active Udhaar</h4>
-        <h2>Rs. 0</h2>
+    <!-- 1. Billing Counter Tab -->
+    <div id="billing" class="tab-content active">
+      <div class="billing-grid">
+        <div class="card-panel">
+          <h3>Select Accessories / Scan Barcode (Press ENTER)</h3>
+          <div class="search-box">
+            <input type="text" id="search-input" placeholder="Type accessory/code and press ENTER to add..." onkeyup="filterProducts(event)">
+          </div>
+
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Code</th>
+                  <th>Name</th>
+                  <th>Stock</th>
+                  <th>Price</th>
+                  <th>Action</th>
+                </tr>
+              </thead>
+              <tbody id="inventory-list"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card-panel">
+          <h3>Current Customer Bill</h3>
+          <div class="table-responsive">
+            <table>
+              <thead>
+                <tr>
+                  <th>Item</th>
+                  <th>Sale Price</th>
+                  <th>Qty</th>
+                  <th>Total</th>
+                  <th>Remove</th>
+                </tr>
+              </thead>
+              <tbody id="cart-list"></tbody>
+            </table>
+          </div>
+
+          <div class="cart-summary">
+            <div class="summary-row">
+              <span>Subtotal:</span>
+              <span id="subtotal">Rs. 0</span>
+            </div>
+            
+            <div class="discount-box">
+              <label>Extra Discount (Rs.):</label>
+              <input type="number" id="flat-discount" value="0" min="0" oninput="updateCartUI()">
+            </div>
+
+            <div class="summary-row total">
+              <span>Grand Total:</span>
+              <span id="grand-total">Rs. 0</span>
+            </div>
+          </div>
+
+          <button class="btn-save-bill" id="btn-save" onclick="saveBill()">💾 Save Bill</button>
+        </div>
       </div>
     </div>
 
-    <!-- Content Row -->
-    <div class="content-grid">
-      <!-- Inventory Table -->
+    <!-- 2. Stock / Accessories Manager Tab -->
+    <div id="stock-mgr" class="tab-content">
       <div class="card-panel">
-        <h3>Current Inventory</h3>
+        <h3>➕ Add New Item / Mobile Accessory to Stock</h3>
+        <div class="form-grid-4">
+          <input type="text" id="inv-code" placeholder="Barcode / Code (e.g. 1001)">
+          <input type="text" id="inv-name" placeholder="Item Name (e.g. Samsung 25W Charger)">
+          <input type="number" id="inv-cost" placeholder="Purchase Cost (Rs.)">
+          <input type="number" id="inv-price" placeholder="Sale Price (Rs.)">
+          <input type="number" id="inv-qty" placeholder="Stock Qty">
+          <button class="btn-add-item" style="grid-column: span 5; padding: 10px;" onclick="addNewInventoryItem()">+ Save to Stock & Billing</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="sales-header">
+          <h3>Current Shop Inventory & Accessories List</h3>
+        </div>
         <div class="table-responsive">
           <table>
             <thead>
               <tr>
                 <th>Code</th>
-                <th>Name</th>
-                <th>Cost</th>
-                <th>Price</th>
-                <th>Stock</th>
+                <th>Item Name</th>
+                <th>Cost Price</th>
+                <th>Sale Price</th>
+                <th>Remaining Stock</th>
                 <th>Action</th>
               </tr>
             </thead>
-            <tbody>
-              <!-- Inventory Items will go here -->
-            </tbody>
+            <tbody id="full-inventory-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Vape & Refill Corner Tab -->
+    <div id="vape" class="tab-content">
+      <div class="card-panel">
+        <h3>🧪 Select Flavor & Add to Bill (Press ENTER)</h3>
+        <div class="search-box">
+          <input type="text" id="vape-search-input" placeholder="Search flavor name and press ENTER to add to bill..." onkeyup="filterVapeProducts(event)">
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Flavor Name</th>
+                <th>Bottle Size</th>
+                <th>Remaining Stock</th>
+                <th>Price per ml</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="vape-inventory-list"></tbody>
           </table>
         </div>
       </div>
 
-      <!-- Add Product Form -->
       <div class="card-panel">
-        <h3>Add Product</h3>
-        <form>
-          <div class="form-group">
-            <label>Item Name</label>
-            <input type="text" placeholder="e.g. Samsung Charger">
+        <h3>⚡ Custom ML Refill (Rate: Rs. 100 / ml)</h3>
+        <div class="form-grid-4">
+          <input type="text" id="vape-flavor-name" placeholder="Flavor Name (e.g. Vgod Cubano)" onkeydown="handleCustomVapeEnter(event)">
+          <input type="number" id="vape-ml-qty" placeholder="Quantity in ml" oninput="calculateVapePrice()" onkeydown="handleCustomVapeEnter(event)">
+          <input type="number" id="vape-total-price" placeholder="Total Price (Rs.)" onkeydown="handleCustomVapeEnter(event)">
+          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addCustomVapeRefill()">+ Add to Bill</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h3>➕ Add / Update Juice Stock</h3>
+        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
+          <input type="text" id="new-flavor-name" placeholder="Flavor Name (e.g. Nasty Mango)">
+          <input type="number" id="new-flavor-bottles" placeholder="Bottles Qty" step="0.1">
+          <input type="number" id="new-flavor-mlperbottle" placeholder="Size ml (Default: 30)">
+          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addFlavorToStock()">Save Stock</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h3>📦 E-Liquids & Refill Stock Tracking</h3>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Flavor Name</th>
+                <th>Bottle Size</th>
+                <th>Total Remaining ML</th>
+                <th>Stock Breakdown</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="vape-stock-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Udhaar / Khata Tab -->
+    <div id="udhaar" class="tab-content">
+      <div class="card-panel">
+        <h3>📖 Professional Customer Udhaar / Khata Entry Form</h3>
+        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
+          <input type="text" id="udhaar-name" placeholder="Customer Name (e.g. Ali Ahmed)">
+          <input type="text" id="udhaar-phone" placeholder="Phone Number (e.g. 03001234567)">
+          <input type="number" id="udhaar-amount" placeholder="Udhaar Amount (Rs.)">
+          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addUdhaarEntry()">+ Save Khata</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="sales-header">
+          <h3>Customer Udhaar Ledger</h3>
+          <span class="stock-badge" id="total-udhaar-badge">Total Udhaar: Rs. 0</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Customer Name</th>
+                <th>Phone Number</th>
+                <th>Amount</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="udhaar-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. JazzCash / EasyPaisa Tab -->
+    <div id="banking" class="tab-content">
+      <div class="card-panel">
+        <h3>💳 Mobile Account Transaction Form</h3>
+        <div class="form-grid-4">
+          <select id="bank-type">
+            <option value="JazzCash">JazzCash</option>
+            <option value="EasyPaisa">EasyPaisa</option>
+          </select>
+          <select id="bank-action">
+            <option value="Cash-In">Cash-In (Deposit)</option>
+            <option value="Cash-Out">Cash-Out (Withdrawal)</option>
+            <option value="Load / Bill">Mobile Load / Utility Bill</option>
+          </select>
+          <input type="number" id="bank-amount" placeholder="Transaction Amount (Rs.)">
+          <input type="number" id="bank-commission" placeholder="Commission Earned (Rs.)">
+          <button class="btn-add-item" style="grid-column: span 4; padding: 10px;" onclick="addBankTransaction()">+ Record Transaction</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="sales-header">
+          <h3>JazzCash & EasyPaisa Ledger History</h3>
+          <span class="stock-badge" id="total-commission-badge">Total Commission: Rs. 0</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Service</th>
+                <th>Type</th>
+                <th>Amount</th>
+                <th>Commission</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="bank-history-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Daily Sales & Cash Tab -->
+    <div id="sales" class="tab-content">
+      <div class="card-panel">
+        <div class="sales-header">
+          <h3>Daily Sales Register</h3>
+          <button class="btn-clear-sales" onclick="clearSalesHistory()">🗑️ Reset Today Sales</button>
+        </div>
+
+        <div class="sales-summary-grid">
+          <div class="sales-card total">
+            <div>Total Cash Collected Today</div>
+            <span id="total-daily-cash">Rs. 0</span>
           </div>
-          <div class="form-group">
-            <label>Barcode/Code</label>
-            <input type="text" placeholder="e.g. 1001">
+          <div class="sales-card vape">
+            <div>💨 Vape & Refill Sales</div>
+            <span id="vape-daily-cash">Rs. 0</span>
           </div>
-          <div class="form-group">
-            <label>Purchase Cost (Rs.)</label>
-            <input type="number" placeholder="0">
+          <div class="sales-card mobile">
+            <div>📱 Mobile & Accessories Sales</div>
+            <span id="mobile-daily-cash">Rs. 0</span>
           </div>
-          <div class="form-group">
-            <label>Sale Price (Rs.)</label>
-            <input type="number" placeholder="0">
-          </div>
-          <div class="form-group">
-            <label>Stock Qty</label>
-            <input type="number" placeholder="0">
-          </div>
-          <button type="button" class="btn-add">Add to Inventory</button>
-        </form>
+        </div>
+
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Time</th>
+                <th>Category</th>
+                <th>Items Sold</th>
+                <th>Amount Paid</th>
+              </tr>
+            </thead>
+            <tbody id="sales-history-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7. Shop Expenses Tab -->
+    <div id="expenses" class="tab-content">
+      <div class="card-panel">
+        <h3>🧾 Add Shop Expense Entry</h3>
+        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 2fr auto;">
+          <input type="text" id="expense-title" placeholder="Expense Reason (e.g. Bijli Bill / Chai)">
+          <input type="number" id="expense-amount" placeholder="Amount (Rs.)">
+          <input type="text" id="expense-note" placeholder="Extra Note (Optional)">
+          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addExpenseEntry()">+ Save Expense</button>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <div class="sales-header">
+          <h3>Shop Expenses Ledger</h3>
+          <span class="stock-badge" id="total-expense-badge">Total Expenses: Rs. 0</span>
+        </div>
+        <div class="table-responsive">
+          <table>
+            <thead>
+              <tr>
+                <th>Date</th>
+                <th>Expense Reason</th>
+                <th>Note</th>
+                <th>Amount</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <tbody id="expense-list"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 8. Admin & Reports Tab -->
+    <div id="admin" class="tab-content">
+      <div class="sales-summary-grid">
+        <div class="sales-card total">
+          <div>Total Overall Sales</div>
+          <span id="admin-total-sales">Rs. 0</span>
+        </div>
+        <div class="sales-card expense">
+          <div>Total Overall Expenses</div>
+          <span id="admin-total-expenses">Rs. 0</span>
+        </div>
+        <div class="sales-card vape">
+          <div>Net Profit Estimate</div>
+          <span id="admin-net-profit">Rs. 0</span>
+        </div>
+        <div class="sales-card mobile">
+          <div>Active Udhaar Balance</div>
+          <span id="admin-total-udhaar">Rs. 0</span>
+        </div>
+      </div>
+
+      <div class="card-panel">
+        <h3>📊 Comprehensive Financial & Management Reports</h3>
+        <p style="color: #666; font-size: 14px; line-height: 1.6;">
+          Yahan aap ko dukaan ka live aur professional summary overview milta hai jo kay Sales, Expenses, Net Profit, aur Khata records ko real-time mein calculate karta hai. Saara data browser ke secure storage mein mehfooz rehta hai.
+        </p>
       </div>
     </div>
   </div>
 
+  <script>
+    let cart = [];
+    let currentRole = null;
+    let salesHistory = JSON.parse(localStorage.getItem('ali_mobiles_sales')) || [];
+    
+    let inventory = JSON.parse(localStorage.getItem('ali_mobiles_inventory')) || [
+      { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
+      { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 25 },
+      { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
+    ];
+
+    let vapeStock = JSON.parse(localStorage.getItem('ali_mobiles_vape_stock')) || [
+      { id: '1', name: 'Vgod Cubano', bottleSize: 30, totalMl: 45 },
+      { id: '2', name: 'BLVK Mango Ice', bottleSize: 30, totalMl: 60 },
+      { id: '3', name: 'Nasty Juice Slow Blow', bottleSize: 60, totalMl: 90 }
+    ];
+    let udhaarList = JSON.parse(localStorage.getItem('ali_mobiles_udhaar')) || [];
+    let bankHistory = JSON.parse(localStorage.getItem('ali_mobiles_banking')) || [];
+    let expenseList = JSON.parse(localStorage.getItem('ali_mobiles_expenses')) || [];
+
+    // Passwords Storage Initialization
+    let passwords = JSON.parse(localStorage.getItem('ali_mobiles_passwords')) || {
+      admin: '1234',
+      user: '0000'
+    };
+
+    window.onload = function() {
+      renderInventory();
+      renderFullInventory();
+      renderSalesHistory();
+      renderVapeStock();
+      renderVapeInventory();
+      renderUdhaar();
+      renderBanking();
+      renderExpenses();
+      updateAdminReports();
+      
+      // Ensure login modal is active on load
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('login-pass').focus();
+    };
+
+    function handleLoginEnter(event) {
+      if(event.key === 'Enter') {
+        validateLogin();
+      }
+    }
+
+    function validateLogin() {
+      let role = document.getElementById('login-role').value;
+      let pass = document.getElementById('login-pass').value.trim();
+
+      if(pass === passwords[role]) {
+        currentRole = role;
+        document.getElementById('login-overlay').style.display = 'none';
+        document.getElementById('display-user').innerText = role === 'admin' ? '👤 User: Admin' : '👤 User: Hamza';
+        
+        // Hide Admin tab if logged in as normal user
+        if(role !== 'admin') {
+          document.getElementById('menu-admin-tab').style.display = 'none';
+        } else {
+          document.getElementById('menu-admin-tab').style.display = 'block';
+        }
+      } else {
+        alert('Ghalat password! Baraye meharbani theek password enter karein.');
+        document.getElementById('login-pass').value = '';
+        document.getElementById('login-pass').focus();
+      }
+    }
+
+    function logoutSystem() {
+      currentRole = null;
+      document.getElementById('display-user').innerText = '👤 User: Not Logged In';
+      document.getElementById('login-pass').value = '';
+      document.getElementById('login-overlay').style.display = 'flex';
+      document.getElementById('login-pass').focus();
+    }
+
+    function changePasswordPrompt() {
+      let targetRole = prompt('Kiska password change karna hai? Type karein: "admin" ya "user"');
+      if(!targetRole) return;
+      targetRole = targetRole.toLowerCase().trim();
+
+      if(targetRole !== 'admin' && targetRole !== 'user') {
+        alert('Ghalat role enter kiya!');
+        return;
+      }
+
+      let oldPass = prompt('Purana password enter karein:');
+      if(oldPass !== passwords[targetRole]) {
+        alert('Purana password ghalat hai!');
+        return;
+      }
+
+      let newPass = prompt('Naya password enter karein:');
+      if(!newPass) return;
+
+      passwords[targetRole] = newPass;
+      localStorage.setItem('ali_mobiles_passwords', JSON.stringify(passwords));
+      alert(targetRole.toUpperCase() + ' password successfully update ho gaya!');
+    }
+
+    function switchTab(btn, tabId) {
+      if(!currentRole) {
+        alert('Pehle login karein!');
+        logoutSystem();
+        return;
+      }
+
+      if(tabId === 'admin' && currentRole !== 'admin') {
+        alert('Access Denied! Sirf Admin hi reports dekh sakta hai.');
+        return;
+      }
+
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.nav-menu li').forEach(el => el.classList.remove('active'));
+      
+      document.getElementById(tabId).classList.add('active');
+      btn.parentElement.classList.add('active');
+      document.getElementById('page-title').innerText = btn.innerText.replace(/[^\w\s]/gi, '').trim();
+      updateAdminReports();
+    }
+
+    // --- Inventory & Accessories Functions ---
+    function addNewInventoryItem() {
+      if(!currentRole) { logoutSystem(); return; }
+      let code = document.getElementById('inv-code').value.trim();
+      let name = document.getElementById('inv-name').value.trim();
+      let cost = parseFloat(document.getElementById('inv-cost').value);
+      let price = parseFloat(document.getElementById('inv-price').value);
+      let qty = parseInt(document.getElementById('inv-qty').value);
+
+      if (!code || !name || isNaN(cost) || isNaN(price) || isNaN(qty)) {
+        alert('Baraye meharbani saari fields theek se fill karein!');
+        return;
+      }
+
+      let existing = inventory.find(i => i.code === code);
+      if (existing) {
+        existing.name = name;
+        existing.cost = cost;
+        existing.price = price;
+        existing.qty += qty;
+      } else {
+        inventory.push({ code, name, cost, price, qty });
+      }
+
+      localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
+      renderInventory();
+      renderFullInventory();
+
+      document.getElementById('inv-code').value = '';
+      document.getElementById('inv-name').value = '';
+      document.getElementById('inv-cost').value = '';
+      document.getElementById('inv-price').value = '';
+      document.getElementById('inv-qty').value = '';
+
+      alert('Accessory successfully added to stock & billing!');
+    }
+
+    function renderInventory() {
+      let tbody = document.getElementById('inventory-list');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      inventory.forEach(item => {
+        tbody.innerHTML += `
+          <tr data-code="${item.code}" data-name="${item.name.toLowerCase()}" data-price="${item.price}" data-category="mobile">
+            <td>${item.code}</td>
+            <td><strong>${item.name}</strong></td>
+            <td><span class="stock-badge">${item.qty} Pcs</span></td>
+            <td>Rs. ${item.price}</td>
+            <td><button class="btn-add-item" onclick="addToCart('${item.code}', '${item.name}', ${item.price}, 'mobile')">+ Add</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function renderFullInventory() {
+      let tbody = document.getElementById('full-inventory-list');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+
+      inventory.forEach(item => {
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.code}</td>
+            <td><strong>${item.name}</strong></td>
+            <td>Rs. ${item.cost}</td>
+            <td>Rs. ${item.price}</td>
+            <td><span class="stock-badge">${item.qty} Pcs</span></td>
+            <td><button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function deleteInventoryItem(code) {
+      if(!currentRole) { logoutSystem(); return; }
+      if(confirm('Kya aap is item ko stock se delete karna chahte hain?')) {
+        inventory = inventory.filter(i => i.code !== code);
+        localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
+        renderInventory();
+        renderFullInventory();
+      }
+    }
+
+    function filterProducts(event) {
+      let inputVal = document.getElementById('search-input').value.toLowerCase().trim();
+      let rows = document.querySelectorAll('#inventory-list tr');
+      let visibleRows = [];
+
+      rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        if (text.includes(inputVal)) {
+          row.style.display = '';
+          visibleRows.push(row);
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (event.key === 'Enter' && inputVal !== '') {
+        if (visibleRows.length > 0) {
+          let topRow = visibleRows[0];
+          let code = topRow.getAttribute('data-code');
+          let name = topRow.getAttribute('data-name');
+          let price = parseFloat(topRow.getAttribute('data-price'));
+          let category = topRow.getAttribute('data-category') || 'mobile';
+
+          addToCart(code, name, price, category);
+          document.getElementById('search-input').value = '';
+          filterProducts({ key: '' });
+        }
+      }
+    }
+
+    // --- Cart & Billing Functions ---
+    function addToCart(code, name, originalPrice, category = 'mobile', mlUsed = 0) {
+      if(!currentRole) { logoutSystem(); return; }
+      if(category === 'mobile') {
+        let stockItem = inventory.find(i => i.code === code);
+        if(stockItem && stockItem.qty <= 0) {
+          alert('Yeh item stock mein khatam ho chuki hai!');
+          return;
+        }
+      }
+
+      let existingItem = cart.find(item => item.code === code);
+      if (existingItem) {
+        existingItem.qty++;
+      } else {
+        cart.push({ 
+          code: code, 
+          name: name, 
+          salePrice: originalPrice, 
+          qty: 1,
+          category: category,
+          mlUsed: mlUsed
+        });
+      }
+      switchTab(document.querySelectorAll('.nav-menu li button')[0], 'billing');
+      updateCartUI();
+    }
+
+    function updateItemPrice(code, newPrice) {
+      let item = cart.find(i => i.code === code);
+      if (item) {
+        item.salePrice = parseFloat(newPrice) || 0;
+        updateCartUI();
+      }
+    }
+
+    function updateItemQty(code, newQty) {
+      let item = cart.find(i => i.code === code);
+      if (item) {
+        item.qty = parseInt(newQty) || 1;
+        updateCartUI();
+      }
+    }
+
+    function removeFromCart(code) {
+      cart = cart.filter(item => item.code !== code);
+      updateCartUI();
+    }
+
+    function updateCartUI() {
+      let cartBody = document.getElementById('cart-list');
+      cartBody.innerHTML = '';
+      let subtotal = 0;
+
+      cart.forEach(item => {
+        let itemTotal = item.salePrice * item.qty;
+        subtotal += itemTotal;
+
+        cartBody.innerHTML += `
+          <tr>
+            <td>${item.name}</td>
+            <td>
+              <input type="number" class="cart-price-input" value="${item.salePrice}" 
+                     onchange="updateItemPrice('${item.code}', this.value)">
+            </td>
+            <td>
+              <input type="number" class="cart-qty-input" value="${item.qty}" min="1" 
+                     onchange="updateItemQty('${item.code}', this.value)">
+            </td>
+            <td>Rs. ${itemTotal}</td>
+            <td><button class="btn-remove" onclick="removeFromCart('${item.code}')">X</button></td>
+          </tr>
+        `;
+      });
+
+      let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
+      let grandTotal = subtotal - extraDiscount;
+      if (grandTotal < 0) grandTotal = 0;
+
+      document.getElementById('subtotal').innerText = 'Rs. ' + subtotal;
+      document.getElementById('grand-total').innerText = 'Rs. ' + grandTotal;
+    }
+
+    function saveBill() {
+      if(!currentRole) { logoutSystem(); return; }
+      if (cart.length === 0) {
+        alert('Cart khali hai! Pehle items add karein.');
+        return;
+      }
+
+      cart.forEach(item => {
+        if(item.category === 'mobile') {
+          let stockItem = inventory.find(i => i.code === item.code);
+          if(stockItem) {
+            stockItem.qty = Math.max(0, stockItem.qty - item.qty);
+          }
+        } else if(item.category === 'vape' && item.mlUsed > 0) {
+          let totalMlDeduct = item.mlUsed * item.qty;
+          let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
+          if(matchedStock) {
+            matchedStock.totalMl = Math.max(0, matchedStock.totalMl - totalMlDeduct);
+          }
+        }
+      });
+
+      localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
+      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
+      renderInventory();
+      renderFullInventory();
+      renderVapeStock();
+      renderVapeInventory();
+
+      let subtotal = cart.reduce((sum, i) => sum + (i.salePrice * i.qty), 0);
+      let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
+      let grandTotal = subtotal - extraDiscount;
+      if (grandTotal < 0) grandTotal = 0;
+
+      let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      let itemsSummary = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
+
+      let hasVape = cart.some(i => i.category === 'vape');
+      let hasMobile = cart.some(i => i.category === 'mobile');
+      let billCategory = (hasVape && hasMobile) ? 'mixed' : (hasVape ? 'vape' : 'mobile');
+
+      salesHistory.unshift({
+        time: currentTime,
+        items: itemsSummary,
+        amount: grandTotal,
+        category: billCategory,
+        cartDetails: cart
+      });
+
+      localStorage.setItem('ali_mobiles_sales', JSON.stringify(salesHistory));
+      renderSalesHistory();
+      updateAdminReports();
+
+      alert('Bill Saved Successfully!\nDaily Sales Recorded: Rs. ' + grandTotal);
+      
+      cart = [];
+      document.getElementById('flat-discount').value = 0;
+      updateCartUI();
+    }
+
+    // --- Vape & Refill Functions ---
+    function calculateVapePrice() {
+      let mlQty = parseFloat(document.getElementById('vape-ml-qty').value) || 0;
+      document.getElementById('vape-total-price').value = mlQty * 100;
+    }
+
+    function handleCustomVapeEnter(event) {
+      if (event.key === 'Enter') {
+        event.preventDefault();
+        addCustomVapeRefill();
+      }
+    }
+
+    function addCustomVapeRefill() {
+      if(!currentRole) { logoutSystem(); return; }
+      let name = document.getElementById('vape-flavor-name').value.trim();
+      let ml = parseFloat(document.getElementById('vape-ml-qty').value);
+      let price = parseFloat(document.getElementById('vape-total-price').value);
+
+      if (!name || isNaN(ml) || isNaN(price)) {
+        alert('Flavor name aur ML quantity enter karein!');
+        return;
+      }
+
+      let itemCode = 'CUSTOM-RF-' + Date.now().toString().slice(-4);
+      let fullName = `${name} (${ml}ml Refill)`;
+
+      addToCart(itemCode, fullName, price, 'vape', ml);
+
+      document.getElementById('vape-flavor-name').value = '';
+      document.getElementById('vape-ml-qty').value = '';
+      document.getElementById('vape-total-price').value = '';
+    }
+
+    function addFlavorToStock() {
+      if(!currentRole) { logoutSystem(); return; }
+      let name = document.getElementById('new-flavor-name').value.trim();
+      let bottles = parseFloat(document.getElementById('new-flavor-bottles').value);
+      let bottleSize = parseFloat(document.getElementById('new-flavor-mlperbottle').value) || 30;
+
+      if (!name || isNaN(bottles) || bottles <= 0) {
+        alert('Valid Flavor Name aur Bottle Quantity enter karein!');
+        return;
+      }
+
+      let addedMl = bottles * bottleSize;
+      let existing = vapeStock.find(item => item.name.toLowerCase() === name.toLowerCase());
+
+      if (existing) {
+        existing.totalMl += addedMl;
+      } else {
+        vapeStock.push({
+          id: Date.now().toString(),
+          name: name,
+          bottleSize: bottleSize,
+          totalMl: addedMl
+        });
+      }
+
+      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
+      renderVapeStock();
+      renderVapeInventory();
+
+      document.getElementById('new-flavor-name').value = '';
+      document.getElementById('new-flavor-bottles').value = '';
+      document.getElementById('new-flavor-mlperbottle').value = '';
+      alert('Juice stock updated successfully!');
+    }
+
+    function renderVapeStock() {
+      let stockBody = document.getElementById('vape-stock-list');
+      if(!stockBody) return;
+      stockBody.innerHTML = '';
+
+      vapeStock.forEach(item => {
+        let bottles = Math.floor(item.totalMl / item.bottleSize);
+        let remMl = item.totalMl % item.bottleSize;
+        let breakdownText = `${bottles} Bottle(s) & ${remMl.toFixed(0)} ml`;
+
+        stockBody.innerHTML += `
+          <tr>
+            <td><strong>${item.name}</strong></td>
+            <td>${item.bottleSize} ml</td>
+            <td>${item.totalMl} ml</td>
+            <td><span class="stock-badge">${breakdownText}</span></td>
+            <td>
+              <button class="btn-add-item" style="margin-right: 5px; padding: 4px 8px; font-size: 12px;" onclick="selectStockForRefill('${item.name}')">+ Refill</button>
+              <button class="btn-remove" onclick="deleteVapeStock('${item.id}')">Delete</button>
+            </td>
+          </tr>
+        `;
+      });
+    }
+
+    function deleteVapeStock(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      if(confirm('Kya aap is flavor ko vape stock se delete karna chahte hain?')) {
+        vapeStock = vapeStock.filter(i => i.id !== id);
+        localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
+        renderVapeStock();
+        renderVapeInventory();
+      }
+    }
+
+    function renderVapeInventory() {
+      let invBody = document.getElementById('vape-inventory-list');
+      if(!invBody) return;
+      invBody.innerHTML = '';
+
+      vapeStock.forEach(item => {
+        let bottles = Math.floor(item.totalMl / item.bottleSize);
+        let remMl = item.totalMl % item.bottleSize;
+        let breakdownText = `${bottles} Bottle(s) & ${remMl.toFixed(0)} ml`;
+
+        invBody.innerHTML += `
+          <tr data-name="${item.name.toLowerCase()}">
+            <td><strong>${item.name}</strong></td>
+            <td>${item.bottleSize} ml</td>
+            <td><span class="stock-badge">${breakdownText}</span></td>
+            <td>Rs. 100 / ml</td>
+            <td><button class="btn-add-item" onclick="addFlavorQuickCart('${item.name}')">+ Add 10ml (Rs. 1000)</button></td>
+          </tr>
+        `;
+      });
+    }
+
+    function filterVapeProducts(event) {
+      let inputVal = document.getElementById('vape-search-input').value.toLowerCase().trim();
+      let rows = document.querySelectorAll('#vape-inventory-list tr');
+      let visibleRows = [];
+
+      rows.forEach(row => {
+        let text = row.innerText.toLowerCase();
+        if (text.includes(inputVal)) {
+          row.style.display = '';
+          visibleRows.push(row);
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (event.key === 'Enter' && inputVal !== '') {
+        if (visibleRows.length > 0) {
+          let topRow = visibleRows[0];
+          let flavorName = topRow.querySelector('strong').innerText;
+          addFlavorQuickCart(flavorName, 10, 1000);
+          document.getElementById('vape-search-input').value = '';
+          filterVapeProducts({ key: '' });
+        }
+      }
+    }
+
+    function addFlavorQuickCart(flavorName, defaultMl = 10, defaultPrice = 1000) {
+      let itemCode = 'VAPE-' + Date.now().toString().slice(-4);
+      let fullName = `${flavorName} (${defaultMl}ml Refill)`;
+      addToCart(itemCode, fullName, defaultPrice, 'vape', defaultMl);
+    }
+
+    function selectStockForRefill(flavorName) {
+      document.getElementById('vape-flavor-name').value = flavorName;
+      document.getElementById('vape-ml-qty').focus();
+    }
+
+    // --- Udhaar Functions ---
+    function addUdhaarEntry() {
+      if(!currentRole) { logoutSystem(); return; }
+      let name = document.getElementById('udhaar-name').value.trim();
+      let phone = document.getElementById('udhaar-phone').value.trim();
+      let amount = parseFloat(document.getElementById('udhaar-amount').value);
+
+      if (!name || isNaN(amount) || amount <= 0) {
+        alert('Baraye meharbani customer name aur valid amount enter karein!');
+        return;
+      }
+
+      udhaarList.unshift({
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString(),
+        name: name,
+        phone: phone || 'N/A',
+        amount: amount,
+        status: 'Pending'
+      });
+
+      localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
+      renderUdhaar();
+      updateAdminReports();
+
+      document.getElementById('udhaar-name').value = '';
+      document.getElementById('udhaar-phone').value = '';
+      document.getElementById('udhaar-amount').value = '';
+    }
+
+    function renderUdhaar() {
+      let tbody = document.getElementById('udhaar-list');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+      let totalUdhaar = 0;
+
+      udhaarList.forEach(item => {
+        if(item.status === 'Pending') totalUdhaar += item.amount;
+        let badge = item.status === 'Pending' ? '<span class="badge-status-pending">Pending</span>' : '<span class="badge-status-paid">Paid</span>';
+        
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.date}</td>
+            <td><strong>${item.name}</strong></td>
+            <td>${item.phone}</td>
+            <td>Rs. ${item.amount}</td>
+            <td>${badge}</td>
+            <td>
+              ${item.status === 'Pending' ? `<button class="btn-add-item" style="padding: 4px 10px; font-size: 12px; margin-right: 5px;" onclick="markUdhaarPaid('${item.id}')">Mark Paid</button>` : ''}
+              <button class="btn-remove" onclick="deleteUdhaar('${item.id}')">X</button>
+            </td>
+          </tr>
+        `;
+      });
+      document.getElementById('total-udhaar-badge').innerText = 'Total Udhaar: Rs. ' + totalUdhaar;
+    }
+
+    function markUdhaarPaid(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      let item = udhaarList.find(i => i.id === id);
+      if(item) {
+        item.status = 'Paid';
+        localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
+        renderUdhaar();
+        updateAdminReports();
+      }
+    }
+
+    function deleteUdhaar(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      udhaarList = udhaarList.filter(i => i.id !== id);
+      localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
+      renderUdhaar();
+      updateAdminReports();
+    }
+
+    // --- Banking Functions ---
+    function addBankTransaction() {
+      if(!currentRole) { logoutSystem(); return; }
+      let service = document.getElementById('bank-type').value;
+      let action = document.getElementById('bank-action').value;
+      let amount = parseFloat(document.getElementById('bank-amount').value);
+      let commission = parseFloat(document.getElementById('bank-commission').value) || 0;
+
+      if (isNaN(amount) || amount <= 0) {
+        alert('Baraye meharbani valid transaction amount enter karein!');
+        return;
+      }
+
+      bankHistory.unshift({
+        id: Date.now().toString(),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        service: service,
+        action: action,
+        amount: amount,
+        commission: commission
+      });
+
+      localStorage.setItem('ali_mobiles_banking', JSON.stringify(bankHistory));
+      renderBanking();
+
+      document.getElementById('bank-amount').value = '';
+      document.getElementById('bank-commission').value = '';
+    }
+
+    function renderBanking() {
+      let tbody = document.getElementById('bank-history-list');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+      let totalComm = 0;
+
+      bankHistory.forEach(item => {
+        totalComm += item.commission;
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.time}</td>
+            <td><strong>${item.service}</strong></td>
+            <td>${item.action}</td>
+            <td>Rs. ${item.amount}</td>
+            <td><strong style="color: green;">+ Rs. ${item.commission}</strong></td>
+            <td><button class="btn-remove" onclick="deleteBankTx('${item.id}')">X</button></td>
+          </tr>
+        `;
+      });
+      document.getElementById('total-commission-badge').innerText = 'Total Commission: Rs. ' + totalComm;
+    }
+
+    function deleteBankTx(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      bankHistory = bankHistory.filter(i => i.id !== id);
+      localStorage.setItem('ali_mobiles_banking', JSON.stringify(bankHistory));
+      renderBanking();
+    }
+
+    // --- Sales & Expense Functions ---
+    function renderSalesHistory() {
+      let salesBody = document.getElementById('sales-history-list');
+      if(!salesBody) return;
+      salesBody.innerHTML = '';
+      
+      let totalCash = 0;
+      let vapeTotal = 0;
+      let mobileTotal = 0;
+
+      salesHistory.forEach(sale => {
+        totalCash += sale.amount;
+
+        if (sale.cartDetails && Array.isArray(sale.cartDetails)) {
+          sale.cartDetails.forEach(item => {
+            let itemTotal = item.salePrice * item.qty;
+            if (item.category === 'vape') vapeTotal += itemTotal;
+            else mobileTotal += itemTotal;
+          });
+        } else {
+          if (sale.category === 'vape') vapeTotal += sale.amount;
+          else mobileTotal += sale.amount;
+        }
+
+        let badgeHtml = sale.category === 'vape' 
+          ? '<span class="badge-vape">Vape</span>' 
+          : (sale.category === 'mobile' ? '<span class="badge-mobile">Mobile</span>' : '<span class="badge-vape">Mixed</span>');
+
+        salesBody.innerHTML += `
+          <tr>
+            <td>${sale.time}</td>
+            <td>${badgeHtml}</td>
+            <td>${sale.items}</td>
+            <td><strong>Rs. ${sale.amount}</strong></td>
+          </tr>
+        `;
+      });
+
+      document.getElementById('total-daily-cash').innerText = 'Rs. ' + totalCash;
+      document.getElementById('vape-daily-cash').innerText = 'Rs. ' + vapeTotal;
+      document.getElementById('mobile-daily-cash').innerText = 'Rs. ' + mobileTotal;
+    }
+
+    function clearSalesHistory() {
+      if(!currentRole) { logoutSystem(); return; }
+      if (confirm('Kya aap waqai aaj ka saara sales record reset/clear karna chahte hain?')) {
+        salesHistory = [];
+        localStorage.removeItem('ali_mobiles_sales');
+        renderSalesHistory();
+        updateAdminReports();
+      }
+    }
+
+    function addExpenseEntry() {
+      if(!currentRole) { logoutSystem(); return; }
+      let title = document.getElementById('expense-title').value.trim();
+      let amount = parseFloat(document.getElementById('expense-amount').value);
+      let note = document.getElementById('expense-note').value.trim();
+
+      if (!title || isNaN(amount) || amount <= 0) {
+        alert('Baraye meharbani expense title aur valid amount enter karein!');
+        return;
+      }
+
+      expenseList.unshift({
+        id: Date.now().toString(),
+        date: new Date().toLocaleDateString(),
+        title: title,
+        amount: amount,
+        note: note || '-'
+      });
+
+      localStorage.setItem('ali_mobiles_expenses', JSON.stringify(expenseList));
+      renderExpenses();
+      updateAdminReports();
+
+      document.getElementById('expense-title').value = '';
+      document.getElementById('expense-amount').value = '';
+      document.getElementById('expense-note').value = '';
+    }
+
+    function renderExpenses() {
+      let tbody = document.getElementById('expense-list');
+      if(!tbody) return;
+      tbody.innerHTML = '';
+      let totalExp = 0;
+
+      expenseList.forEach(item => {
+        totalExp += item.amount;
+        tbody.innerHTML += `
+          <tr>
+            <td>${item.date}</td>
+            <td><strong>${item.title}</strong></td>
+            <td>${item.note}</td>
+            <td>Rs. ${item.amount}</td>
+            <td><button class="btn-remove" onclick="deleteExpense('${item.id}')">X</button></td>
+          </tr>
+        `;
+      });
+      document.getElementById('total-expense-badge').innerText = 'Total Expenses: Rs. ' + totalExp;
+    }
+
+    function deleteExpense(id) {
+      if(!currentRole) { logoutSystem(); return; }
+      expenseList = expenseList.filter(i => i.id !== id);
+      localStorage.setItem('ali_mobiles_expenses', JSON.stringify(expenseList));
+      renderExpenses();
+      updateAdminReports();
+    }
+
+    function updateAdminReports() {
+      let totalSales = salesHistory.reduce((sum, i) => sum + i.amount, 0);
+      let totalExpenses = expenseList.reduce((sum, i) => sum + i.amount, 0);
+      let netProfit = totalSales - totalExpenses;
+      let totalUdhaar = udhaarList.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0);
+
+      let elSales = document.getElementById('admin-total-sales');
+      let elExp = document.getElementById('admin-total-expenses');
+      let elProfit = document.getElementById('admin-net-profit');
+      let elUdhaar = document.getElementById('admin-total-udhaar');
+
+      if(elSales) elSales.innerText = 'Rs. ' + totalSales;
+      if(elExp) elExp.innerText = 'Rs. ' + totalExpenses;
+      if(elProfit) elProfit.innerText = 'Rs. ' + netProfit;
+      if(elUdhaar) elUdhaar.innerText = 'Rs. ' + totalUdhaar;
+    }
+  </script>
 </body>
 </html>
