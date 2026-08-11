@@ -4,6 +4,11 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ALI MOBILES - Cloud Secured POS</title>
+  
+  <!-- Firebase App & Realtime Database SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
   <style>
     * {
       box-sizing: border-box;
@@ -473,7 +478,7 @@
   <div class="main-content">
     <div class="top-header">
       <h1 id="page-title">Billing Counter</h1>
-      <div class="date-badge">📅 Business Date: 2026-08-11</div>
+      <div class="date-badge">📅 Business Date: 2026-08-11 | ☁️ Cloud Sync: <span id="syncStatus" style="color: orange;">Connecting...</span></div>
     </div>
 
     <!-- 1. Billing Counter Tab -->
@@ -841,52 +846,104 @@
       <div class="card-panel">
         <h3>📊 Comprehensive Financial & Management Reports</h3>
         <p style="color: #666; font-size: 14px; line-height: 1.6;">
-          Yahan aap ko dukaan ka live aur professional summary overview milta hai jo kay Sales, Expenses, Net Profit, aur Khata records ko real-time mein calculate karta hai. Saara data browser ke secure storage mein mehfooz rehta hai.
+          Yahan aap ko dukaan ka live aur professional summary overview milta hai jo kay Sales, Expenses, Net Profit, aur Khata records ko real-time mein calculate karta hai. Saara data Firebase Cloud par secure rehta hai taake mobile aur laptop dono par live chale.
         </p>
       </div>
     </div>
   </div>
 
   <script>
+    // Firebase Configuration Integration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCEBlfH3gAdOGawxmamauJzITlYbcmWvMc",
+      authDomain: "alimobilespos.firebaseapp.com",
+      databaseURL: "https://alimobilespos-default-rtdb.firebaseio.com",
+      projectId: "alimobilespos",
+      storageBucket: "alimobilespos.firebasestorage.app",
+      messagingSenderId: "1068601974720",
+      appId: "1:1068601974720:web:ec3de574ade978b128f225",
+      measurementId: "G-9MN85FFYYP"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // Connection Status Check
+    db.ref('.info/connected').on('value', (snap) => {
+        if (snap.val() === true) {
+            document.getElementById('syncStatus').innerText = "Live Connected 🟢";
+            document.getElementById('syncStatus').style.color = "green";
+        } else {
+            document.getElementById('syncStatus').innerText = "Offline 🔴";
+            document.getElementById('syncStatus').style.color = "red";
+        }
+    });
+
     let cart = [];
     let vapeCart = [];
     let currentRole = null;
     let selectedDropdownIndex = -1;
-    let salesHistory = JSON.parse(localStorage.getItem('ali_mobiles_sales')) || [];
     
-    let inventory = JSON.parse(localStorage.getItem('ali_mobiles_inventory')) || [
-      { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
-      { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 25 },
-      { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
-    ];
+    // Data Variables
+    let salesHistory = [];
+    let inventory = [];
+    let vapeStock = [];
+    let udhaarList = [];
+    let bankHistory = [];
+    let expenseList = [];
+    let passwords = { admin: '1234', user: '0000' };
 
-    let vapeStock = JSON.parse(localStorage.getItem('ali_mobiles_vape_stock')) || [
-      { id: '1', name: 'Vgod Cubano', bottleSize: 30, totalMl: 45 },
-      { id: '2', name: 'BLVK Mango Ice', bottleSize: 30, totalMl: 60 },
-      { id: '3', name: 'Nasty Juice Slow Blow', bottleSize: 60, totalMl: 90 }
-    ];
-    let udhaarList = JSON.parse(localStorage.getItem('ali_mobiles_udhaar')) || [];
-    let bankHistory = JSON.parse(localStorage.getItem('ali_mobiles_banking')) || [];
-    let expenseList = JSON.parse(localStorage.getItem('ali_mobiles_expenses')) || [];
-
-    // Passwords Storage Initialization
-    let passwords = JSON.parse(localStorage.getItem('ali_mobiles_passwords')) || {
-      admin: '1234',
-      user: '0000'
-    };
-
+    // Realtime Cloud Sync Loaders on Startup
     window.onload = function() {
-      renderInventory();
-      renderFullInventory();
-      renderSalesHistory();
-      renderVapeStock();
-      renderVapeSearchDropdown('');
-      renderUdhaar();
-      renderBanking();
-      renderExpenses();
-      updateAdminReports();
-      updateVapeCartUI();
-      
+      // Load Passwords
+      db.ref('posData/passwords').once('value', (snapshot) => {
+        if(snapshot.exists()) passwords = snapshot.val();
+      });
+
+      // Realtime Listeners for Cloud Sync across all devices
+      db.ref('posData/inventory').on('value', (snapshot) => {
+        inventory = snapshot.exists() ? snapshot.val() : [
+          { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
+          { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 25 },
+          { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
+        ];
+        renderInventory();
+        renderFullInventory();
+      });
+
+      db.ref('posData/vapeStock').on('value', (snapshot) => {
+        vapeStock = snapshot.exists() ? snapshot.val() : [
+          { id: '1', name: 'Vgod Cubano', bottleSize: 30, totalMl: 45 },
+          { id: '2', name: 'BLVK Mango Ice', bottleSize: 30, totalMl: 60 },
+          { id: '3', name: 'Nasty Juice Slow Blow', bottleSize: 60, totalMl: 90 }
+        ];
+        renderVapeStock();
+        renderVapeSearchDropdown('');
+      });
+
+      db.ref('posData/salesHistory').on('value', (snapshot) => {
+        salesHistory = snapshot.exists() ? snapshot.val() : [];
+        renderSalesHistory();
+        updateAdminReports();
+      });
+
+      db.ref('posData/udhaarList').on('value', (snapshot) => {
+        udhaarList = snapshot.exists() ? snapshot.val() : [];
+        renderUdhaar();
+        updateAdminReports();
+      });
+
+      db.ref('posData/bankHistory').on('value', (snapshot) => {
+        bankHistory = snapshot.exists() ? snapshot.val() : [];
+        renderBanking();
+      });
+
+      db.ref('posData/expenseList').on('value', (snapshot) => {
+        expenseList = snapshot.exists() ? snapshot.val() : [];
+        renderExpenses();
+        updateAdminReports();
+      });
+
       document.getElementById('login-overlay').style.display = 'flex';
       document.getElementById('login-pass').focus();
 
@@ -954,7 +1011,7 @@
       if(!newPass) return;
 
       passwords[targetRole] = newPass;
-      localStorage.setItem('ali_mobiles_passwords', JSON.stringify(passwords));
+      db.ref('posData/passwords').set(passwords);
       alert(targetRole.toUpperCase() + ' password successfully update ho gaya!');
     }
 
@@ -1014,9 +1071,7 @@
         }
       }
 
-      localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
-      renderInventory();
-      renderFullInventory();
+      db.ref('posData/inventory').set(inventory);
 
       document.getElementById('inv-code').value = '';
       document.getElementById('inv-name').value = '';
@@ -1024,7 +1079,7 @@
       document.getElementById('inv-price').value = '';
       document.getElementById('inv-qty').value = '';
 
-      alert('Accessory stock successfully updated!');
+      alert('Accessory stock successfully updated to Cloud!');
     }
 
     function editInventoryItem(code) {
@@ -1090,9 +1145,7 @@
       if(!currentRole) { logoutSystem(); return; }
       if(confirm('Kya aap is item ko stock se delete karna chahte hain?')) {
         inventory = inventory.filter(i => i.code !== code);
-        localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
-        renderInventory();
-        renderFullInventory();
+        db.ref('posData/inventory').set(inventory);
       }
     }
 
@@ -1135,7 +1188,7 @@
         let addedMl = Number((mlUsed > 0 ? mlUsed : 1).toFixed(1));
         if (existingVapeItem) {
           existingVapeItem.mlUsed = Number((existingVapeItem.mlUsed + addedMl).toFixed(1));
-          existingVapeItem.salePrice = Number((existingVapeItem.mlUsed * 100).toFixed(1)); // Rate Rs. 100 per ml
+          existingVapeItem.salePrice = Number((existingVapeItem.mlUsed * 100).toFixed(1));
         } else {
           vapeCart.push({ 
             code: code, 
@@ -1245,9 +1298,7 @@
         }
       });
 
-      localStorage.setItem('ali_mobiles_inventory', JSON.stringify(inventory));
-      renderInventory();
-      renderFullInventory();
+      db.ref('posData/inventory').set(inventory);
 
       let subtotal = cart.reduce((sum, i) => sum + (i.salePrice * i.qty), 0);
       let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
@@ -1265,11 +1316,9 @@
         cartDetails: cart
       });
 
-      localStorage.setItem('ali_mobiles_sales', JSON.stringify(salesHistory));
-      renderSalesHistory();
-      updateAdminReports();
+      db.ref('posData/salesHistory').set(salesHistory);
 
-      alert('Bill Saved Successfully!\nDaily Sales Recorded: Rs. ' + grandTotal.toFixed(1));
+      alert('Bill Saved & Synced to Cloud Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
       
       cart = [];
       document.getElementById('flat-discount').value = 0;
@@ -1282,7 +1331,7 @@
       if (item) {
         let val = Number((parseFloat(newMl) || 1).toFixed(1));
         item.mlUsed = val;
-        item.salePrice = Number((val * 100).toFixed(1)); // Recalculate based on Rs. 100 per ml rate
+        item.salePrice = Number((val * 100).toFixed(1));
         updateVapeCartUI();
       }
     }
@@ -1338,9 +1387,7 @@
         }
       });
 
-      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
-      renderVapeStock();
-      renderVapeSearchDropdown('');
+      db.ref('posData/vapeStock').set(vapeStock);
 
       let subtotal = vapeCart.reduce((sum, i) => sum + i.salePrice, 0);
       let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
@@ -1358,11 +1405,9 @@
         cartDetails: vapeCart
       });
 
-      localStorage.setItem('ali_mobiles_sales', JSON.stringify(salesHistory));
-      renderSalesHistory();
-      updateAdminReports();
+      db.ref('posData/salesHistory').set(salesHistory);
 
-      alert('Vape Bill Saved Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
+      alert('Vape Bill Saved & Synced Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
       
       vapeCart = [];
       document.getElementById('vape-flat-discount').value = 0;
@@ -1551,14 +1596,12 @@
         }
       }
 
-      localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
-      renderVapeStock();
-      renderVapeSearchDropdown('');
+      db.ref('posData/vapeStock').set(vapeStock);
 
       document.getElementById('new-flavor-name').value = '';
       document.getElementById('new-flavor-bottles').value = '';
       document.getElementById('new-flavor-mlperbottle').value = '';
-      alert('Vape stock successfully updated!');
+      alert('Vape stock successfully updated to Cloud!');
     }
 
     function editVapeStock(id) {
@@ -1607,9 +1650,7 @@
       if(!currentRole) { logoutSystem(); return; }
       if(confirm('Kya aap is flavor ko vape stock se delete karna chahte hain?')) {
         vapeStock = vapeStock.filter(i => i.id !== id);
-        localStorage.setItem('ali_mobiles_vape_stock', JSON.stringify(vapeStock));
-        renderVapeStock();
-        renderVapeSearchDropdown('');
+        db.ref('posData/vapeStock').set(vapeStock);
       }
     }
 
@@ -1634,9 +1675,7 @@
         status: 'Pending'
       });
 
-      localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
-      renderUdhaar();
-      updateAdminReports();
+      db.ref('posData/udhaarList').set(udhaarList);
 
       document.getElementById('udhaar-name').value = '';
       document.getElementById('udhaar-phone').value = '';
@@ -1675,18 +1714,14 @@
       let item = udhaarList.find(i => i.id === id);
       if(item) {
         item.status = 'Paid';
-        localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
-        renderUdhaar();
-        updateAdminReports();
+        db.ref('posData/udhaarList').set(udhaarList);
       }
     }
 
     function deleteUdhaar(id) {
       if(!currentRole) { logoutSystem(); return; }
       udhaarList = udhaarList.filter(i => i.id !== id);
-      localStorage.setItem('ali_mobiles_udhaar', JSON.stringify(udhaarList));
-      renderUdhaar();
-      updateAdminReports();
+      db.ref('posData/udhaarList').set(udhaarList);
     }
 
     // --- Banking Functions ---
@@ -1711,8 +1746,7 @@
         commission: commission
       });
 
-      localStorage.setItem('ali_mobiles_banking', JSON.stringify(bankHistory));
-      renderBanking();
+      db.ref('posData/bankHistory').set(bankHistory);
 
       document.getElementById('bank-amount').value = '';
       document.getElementById('bank-commission').value = '';
@@ -1743,8 +1777,7 @@
     function deleteBankTx(id) {
       if(!currentRole) { logoutSystem(); return; }
       bankHistory = bankHistory.filter(i => i.id !== id);
-      localStorage.setItem('ali_mobiles_banking', JSON.stringify(bankHistory));
-      renderBanking();
+      db.ref('posData/bankHistory').set(bankHistory);
     }
 
     // --- Sales & Expense Functions ---
@@ -1794,9 +1827,7 @@
       if(!currentRole) { logoutSystem(); return; }
       if (confirm('Kya aap waqai aaj ka saara sales record reset/clear karna chahte hain?')) {
         salesHistory = [];
-        localStorage.removeItem('ali_mobiles_sales');
-        renderSalesHistory();
-        updateAdminReports();
+        db.ref('posData/salesHistory').remove();
       }
     }
 
@@ -1819,9 +1850,7 @@
         note: note || '-'
       });
 
-      localStorage.setItem('ali_mobiles_expenses', JSON.stringify(expenseList));
-      renderExpenses();
-      updateAdminReports();
+      db.ref('posData/expenseList').set(expenseList);
 
       document.getElementById('expense-title').value = '';
       document.getElementById('expense-amount').value = '';
@@ -1852,9 +1881,7 @@
     function deleteExpense(id) {
       if(!currentRole) { logoutSystem(); return; }
       expenseList = expenseList.filter(i => i.id !== id);
-      localStorage.setItem('ali_mobiles_expenses', JSON.stringify(expenseList));
-      renderExpenses();
-      updateAdminReports();
+      db.ref('posData/expenseList').set(expenseList);
     }
 
     function updateAdminReports() {
