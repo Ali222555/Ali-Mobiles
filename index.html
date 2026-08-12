@@ -314,6 +314,21 @@
       margin-top: 8px;
     }
 
+    .customer-info-box {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+
+    .customer-info-box input {
+      padding: 8px;
+      border: 1px solid #cbd5e0;
+      border-radius: 6px;
+      font-size: 13px;
+      outline: none;
+    }
+
     .discount-box {
       display: flex;
       align-items: center;
@@ -408,6 +423,22 @@
       border-radius: 4px;
       font-weight: 600;
       font-size: 12px;
+    }
+
+    .stock-badge-low {
+      background: #fed7d7;
+      color: #9b2c2c;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 12px;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
     }
 
     .vape-dropdown-item {
@@ -508,6 +539,12 @@
 
         <div class="card-panel">
           <h3>Current Customer Bill</h3>
+          
+          <div class="customer-info-box">
+            <input type="text" id="bill-customer-name" placeholder="Customer Name (Optional)">
+            <input type="text" id="bill-customer-phone" placeholder="Phone Number (Optional)">
+          </div>
+
           <div class="table-responsive">
             <table>
               <thead>
@@ -777,6 +814,7 @@
             <thead>
               <tr>
                 <th>Time</th>
+                <th>Customer / Details</th>
                 <th>Category</th>
                 <th>Items Sold</th>
                 <th>Amount Paid</th>
@@ -904,7 +942,7 @@
       db.ref('posData/inventory').on('value', (snapshot) => {
         inventory = snapshot.exists() ? snapshot.val() : [
           { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
-          { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 25 },
+          { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 3 },
           { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
         ];
         renderInventory();
@@ -954,6 +992,19 @@
           resultsBox.style.display = 'none';
         }
       });
+
+      // Global Shortcut Key: F2 to focus barcode search
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'F2') {
+          e.preventDefault();
+          let searchInput = document.getElementById('search-input');
+          let billingTab = document.getElementById('billing');
+          if (billingTab && billingTab.classList.contains('active') && searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }
+      });
     };
 
     function handleLoginEnter(event) {
@@ -976,6 +1027,12 @@
         } else {
           document.getElementById('menu-admin-tab').style.display = 'block';
         }
+
+        setTimeout(() => {
+          let searchInput = document.getElementById('search-input');
+          if(searchInput) searchInput.focus();
+        }, 100);
+
       } else {
         alert('Ghalat password! Baraye meharbani theek password enter karein.');
         document.getElementById('login-pass').value = '';
@@ -1034,6 +1091,16 @@
       btn.parentElement.classList.add('active');
       document.getElementById('page-title').innerText = btn.innerText.replace(/[^\w\s]/gi, '').trim();
       updateAdminReports();
+
+      if (tabId === 'billing') {
+        setTimeout(() => {
+          let searchInput = document.getElementById('search-input');
+          if(searchInput) {
+            searchInput.focus();
+            searchInput.select();
+          }
+        }, 50);
+      }
     }
 
     // --- Inventory & Accessories Functions ---
@@ -1107,11 +1174,15 @@
       tbody.innerHTML = '';
 
       inventory.forEach(item => {
+        let stockDisplay = item.qty <= 5 
+          ? `<span class="stock-badge-low">⚠️ Low: ${item.qty} Pcs</span>` 
+          : `<span class="stock-badge">${item.qty} Pcs</span>`;
+
         tbody.innerHTML += `
           <tr data-code="${item.code}" data-name="${item.name.toLowerCase()}" data-price="${item.price}" data-category="mobile">
             <td>${item.code}</td>
             <td><strong>${item.name}</strong></td>
-            <td><span class="stock-badge">${item.qty} Pcs</span></td>
+            <td>${stockDisplay}</td>
             <td>Rs. ${item.price}</td>
             <td><button class="btn-add-item" onclick="addToCart('${item.code}', '${item.name}', ${item.price}, 'mobile')">+ Add</button></td>
           </tr>
@@ -1125,13 +1196,17 @@
       tbody.innerHTML = '';
 
       inventory.forEach(item => {
+        let stockDisplay = item.qty <= 5 
+          ? `<span class="stock-badge-low">⚠️ Low Stock: ${item.qty} Pcs</span>` 
+          : `<span class="stock-badge">${item.qty} Pcs</span>`;
+
         tbody.innerHTML += `
           <tr>
             <td>${item.code}</td>
             <td><strong>${item.name}</strong></td>
             <td>Rs. ${item.cost}</td>
             <td>Rs. ${item.price}</td>
-            <td><span class="stock-badge">${item.qty} Pcs</span></td>
+            <td>${stockDisplay}</td>
             <td>
               <button class="btn-edit" onclick="editInventoryItem('${item.code}')">Edit</button>
               <button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button>
@@ -1289,6 +1364,9 @@
         return;
       }
 
+      let customerName = document.getElementById('bill-customer-name').value.trim() || 'Walk-in Customer';
+      let customerPhone = document.getElementById('bill-customer-phone').value.trim() || '';
+
       cart.forEach(item => {
         if(item.category === 'mobile') {
           let stockItem = inventory.find(i => i.code === item.code);
@@ -1310,6 +1388,8 @@
 
       salesHistory.unshift({
         time: currentTime,
+        customerName: customerName,
+        customerPhone: customerPhone,
         items: itemsSummary,
         amount: grandTotal,
         category: 'mobile',
@@ -1318,11 +1398,19 @@
 
       db.ref('posData/salesHistory').set(salesHistory);
 
-      alert('Bill Saved & Synced to Cloud Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
+      alert('Bill Saved & Synced to Cloud Successfully!\nCustomer: ' + customerName + '\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
       
       cart = [];
+      document.getElementById('bill-customer-name').value = '';
+      document.getElementById('bill-customer-phone').value = '';
       document.getElementById('flat-discount').value = 0;
       updateCartUI();
+
+      let searchInput = document.getElementById('search-input');
+      if (searchInput) {
+        searchInput.focus();
+        searchInput.select();
+      }
     }
 
     // --- Vape & Refill Functions ---
@@ -1399,6 +1487,8 @@
 
       salesHistory.unshift({
         time: currentTime,
+        customerName: 'Vape Customer',
+        customerPhone: '',
         items: itemsSummary,
         amount: grandTotal,
         category: 'vape',
@@ -1808,9 +1898,14 @@
           ? '<span class="badge-vape">Vape</span>' 
           : (sale.category === 'mobile' ? '<span class="badge-mobile">Mobile</span>' : '<span class="badge-vape">Mixed</span>');
 
+        let custDisplay = sale.customerName 
+          ? `<strong>${sale.customerName}</strong> ${sale.customerPhone ? '('+sale.customerPhone+')' : ''}` 
+          : 'Walk-in Customer';
+
         salesBody.innerHTML += `
           <tr>
             <td>${sale.time}</td>
+            <td>${custDisplay}</td>
             <td>${badgeHtml}</td>
             <td>${sale.items}</td>
             <td><strong>Rs. ${sale.amount.toFixed(1)}</strong></td>
