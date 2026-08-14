@@ -1,2000 +1,2172 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>ALI MOBILES - Cloud Secured POS</title>
-  
-  <!-- Firebase App & Realtime Database SDKs -->
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ALI MOBILES - Cloud Secured POS</title>
+<!-- Firebase App & Realtime Database SDKs -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+body { display: flex; background-color: #f4f6f9; min-height: 100vh; color: #333; }
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    }
+/* Login Overlay Styling */
+#login-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(15, 23, 42, 0.95);
+    display: flex; justify-content: center; align-items: center;
+    z-index: 9999;
+}
+.login-box {
+    background: #ffffff; padding: 30px; border-radius: 12px;
+    width: 350px; box-shadow: 0 10px 25px rgba(0,0,0,0.3); text-align: center;
+}
+.login-box h2 { color: #1a253f; margin-bottom: 5px; }
+.login-box p { color: #64748b; font-size: 13px; margin-bottom: 20px; }
+.login-box select, .login-box input {
+    width: 100%; padding: 10px; margin-bottom: 12px;
+    border: 1px solid #cbd5e0; border-radius: 6px; font-size: 14px; outline: none;
+}
+.btn-login {
+    width: 100%; background-color: #2563eb; color: white; border: none;
+    padding: 12px; border-radius: 6px; font-weight: bold; cursor: pointer; font-size: 15px;
+}
+.btn-login:hover { background-color: #1d4ed8; }
 
-    body {
-      display: flex;
-      background-color: #f4f6f9;
-      min-height: 100vh;
-      color: #333;
-    }
+.sidebar {
+    width: 250px; background-color: #1a253f; color: #fff;
+    display: flex; flex-direction: column; padding: 20px; flex-shrink: 0;
+}
+.sidebar h2 { color: #38ef7d; font-size: 20px; margin-bottom: 10px; }
+.user-info { font-size: 13px; color: #a0aec0; margin-bottom: 20px; border-bottom: 1px solid #2d3748; padding-bottom: 15px; }
+.user-info span { display: block; margin-top: 4px; }
+.nav-menu { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.nav-menu li button {
+    width: 100%; text-align: left; background: none; border: none; color: #cbd5e0;
+    padding: 10px 15px; border-radius: 6px; font-size: 14px; cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+}
+.nav-menu li.active button, .nav-menu li button:hover { background-color: #2563eb; color: #fff; font-weight: 600; }
+.sidebar-footer { margin-top: auto; display: flex; flex-direction: column; gap: 10px; padding-top: 20px; }
+.btn-admin { background-color: #e53e3e; color: white; border: none; padding: 10px; border-radius: 6px; font-weight: bold; cursor: pointer; }
+.btn-password { background-color: #2b6cb0; color: white; border: none; padding: 10px; border-radius: 6px; cursor: pointer; }
 
-    /* Login Overlay Styling */
-    #login-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(15, 23, 42, 0.95);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      z-index: 9999;
-    }
+.main-content { flex: 1; padding: 25px; overflow-y: auto; }
+.top-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 10px; }
+.date-badge { background: #e6fffa; color: #234e52; padding: 8px 14px; border-radius: 20px; font-weight: 600; font-size: 14px; display: flex; align-items: center; gap: 6px; }
+.date-badge input { border: 1px solid #b2f5ea; border-radius: 4px; padding: 2px 6px; font-size: 13px; background: #fff; cursor: pointer; }
 
-    .login-box {
-      background: #ffffff;
-      padding: 30px;
-      border-radius: 12px;
-      width: 350px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      text-align: center;
-    }
+.tab-content { display: none; }
+.tab-content.active { display: block; }
 
-    .login-box h2 {
-      color: #1a253f;
-      margin-bottom: 5px;
-    }
+.billing-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 20px; }
+.card-panel { background: #fff; padding: 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.card-panel h3 { margin-bottom: 15px; color: #2d3748; }
+.search-box { display: flex; gap: 10px; margin-bottom: 15px; }
+.search-box input { flex: 1; padding: 10px; border: 1px solid #cbd5e0; border-radius: 6px; outline: none; }
 
-    .login-box p {
-      color: #64748b;
-      font-size: 13px;
-      margin-bottom: 20px;
-    }
+.table-responsive { width: 100%; overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; text-align: left; }
+th, td { padding: 10px; border-bottom: 1px solid #edf2f7; font-size: 14px; }
+th { background-color: #f7fafc; color: #4a5568; }
 
-    .login-box select, .login-box input {
-      width: 100%;
-      padding: 10px;
-      margin-bottom: 12px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      font-size: 14px;
-      outline: none;
-    }
+.btn-add-item { background: #38ef7d; color: #0f5132; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: bold; }
+.btn-edit { background: #3182ce; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; margin-right: 4px; }
+.btn-remove { background: #e53e3e; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; font-size: 12px; }
 
-    .btn-login {
-      width: 100%;
-      background-color: #2563eb;
-      color: white;
-      border: none;
-      padding: 12px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-      font-size: 15px;
-    }
+.cart-price-input, .cart-qty-input { width: 85px; padding: 5px; border: 1px solid #cbd5e0; border-radius: 4px; text-align: center; }
+.cart-summary { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 15px; margin-top: 15px; }
+.summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 14px; }
+.summary-row.total { font-size: 18px; font-weight: bold; color: #1a253f; border-top: 2px solid #cbd5e0; padding-top: 8px; margin-top: 8px; }
+.customer-info-box { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.customer-info-box input { padding: 8px; border: 1px solid #cbd5e0; border-radius: 6px; font-size: 13px; outline: none; }
+.discount-box { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.discount-box input { width: 100px; padding: 6px; border: 1px solid #cbd5e0; border-radius: 4px; }
+.btn-save-bill { width: 100%; background-color: #2563eb; color: #ffffff; border: none; padding: 14px; border-radius: 6px; font-weight: bold; font-size: 16px; cursor: pointer; margin-top: 15px; }
 
-    .btn-login:hover {
-      background-color: #1d4ed8;
-    }
+.form-grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)) auto; gap: 10px; align-items: center; margin-bottom: 15px; }
+.form-grid-4 input, .form-grid-4 select { padding: 9px; border: 1px solid #cbd5e0; border-radius: 6px; }
 
-    .sidebar {
-      width: 250px;
-      background-color: #1a253f;
-      color: #fff;
-      display: flex;
-      flex-direction: column;
-      padding: 20px;
-      flex-shrink: 0;
-    }
+.sales-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; flex-wrap: wrap; gap: 10px; }
+.sales-summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-bottom: 20px; }
+.sales-card { padding: 15px; border-radius: 8px; font-weight: bold; }
+.sales-card.total { background: #38ef7d; color: #0f5132; font-size: 18px; }
+.sales-card.vape { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
+.sales-card.mobile { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
+.sales-card.expense { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
+.sales-card div { font-size: 13px; font-weight: normal; margin-bottom: 4px; }
 
-    .sidebar h2 {
-      color: #38ef7d;
-      font-size: 20px;
-      margin-bottom: 10px;
-    }
+.badge-vape { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.badge-mobile { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.badge-status-pending { background: #feebc8; color: #744210; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.badge-status-paid { background: #c6f6d5; color: #22543d; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
+.btn-clear-sales { background: #e53e3e; color: white; border: none; padding: 8px 14px; border-radius: 6px; cursor: pointer; font-weight: bold; }
 
-    .user-info {
-      font-size: 13px;
-      color: #a0aec0;
-      margin-bottom: 20px;
-      border-bottom: 1px solid #2d3748;
-      padding-bottom: 15px;
-    }
+.stock-badge { background: #feebc8; color: #744210; padding: 4px 8px; border-radius: 4px; font-weight: 600; font-size: 12px; }
+.stock-badge-low { background: #fed7d7; color: #9b2c2c; padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 12px; animation: pulse 1.5s infinite; }
+@keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
 
-    .user-info span {
-      display: block;
-      margin-top: 4px;
-    }
+.vape-dropdown-item { padding: 10px; border-bottom: 1px solid #edf2f7; cursor: pointer; font-size: 13px; transition: background 0.15s; }
+.vape-dropdown-item:hover, .vape-dropdown-item.selected { background: #eef2ff !important; color: #3730a3; }
 
-    .nav-menu {
-      list-style: none;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-    }
-
-    .nav-menu li button {
-      width: 100%;
-      text-align: left;
-      background: none;
-      border: none;
-      color: #cbd5e0;
-      padding: 10px 15px;
-      border-radius: 6px;
-      font-size: 14px;
-      cursor: pointer;
-      transition: background 0.2s, color 0.2s;
-    }
-
-    .nav-menu li.active button, .nav-menu li button:hover {
-      background-color: #2563eb;
-      color: #fff;
-      font-weight: 600;
-    }
-
-    .sidebar-footer {
-      margin-top: auto;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      padding-top: 20px;
-    }
-
-    .btn-admin {
-      background-color: #e53e3e;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      font-weight: bold;
-      cursor: pointer;
-    }
-
-    .btn-password {
-      background-color: #2b6cb0;
-      color: white;
-      border: none;
-      padding: 10px;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .main-content {
-      flex: 1;
-      padding: 25px;
-      overflow-y: auto;
-    }
-
-    .top-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 25px;
-    }
-
-    .date-badge {
-      background: #e6fffa;
-      color: #234e52;
-      padding: 8px 14px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-
-    .tab-content {
-      display: none;
-    }
-
-    .tab-content.active {
-      display: block;
-    }
-
-    .billing-grid {
-      display: grid;
-      grid-template-columns: 1.5fr 1fr;
-      gap: 20px;
-    }
-
-    .card-panel {
-      background: #fff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-      margin-bottom: 20px;
-    }
-
-    .card-panel h3 {
-      margin-bottom: 15px;
-      color: #2d3748;
-    }
-
-    .search-box {
-      display: flex;
-      gap: 10px;
-      margin-bottom: 15px;
-    }
-
-    .search-box input {
-      flex: 1;
-      padding: 10px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      outline: none;
-    }
-
-    .table-responsive {
-      width: 100%;
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      text-align: left;
-    }
-
-    th, td {
-      padding: 10px;
-      border-bottom: 1px solid #edf2f7;
-      font-size: 14px;
-    }
-
-    th {
-      background-color: #f7fafc;
-      color: #4a5568;
-    }
-
-    .btn-add-item {
-      background: #38ef7d;
-      color: #0f5132;
-      border: none;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .btn-edit {
-      background: #3182ce;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-      margin-right: 4px;
-    }
-
-    .btn-remove {
-      background: #e53e3e;
-      color: white;
-      border: none;
-      padding: 5px 10px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 12px;
-    }
-
-    .cart-price-input, .cart-qty-input {
-      width: 85px;
-      padding: 5px;
-      border: 1px solid #cbd5e0;
-      border-radius: 4px;
-      text-align: center;
-    }
-
-    .cart-summary {
-      background: #f8fafc;
-      border: 1px solid #e2e8f0;
-      border-radius: 8px;
-      padding: 15px;
-      margin-top: 15px;
-    }
-
-    .summary-row {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .summary-row.total {
-      font-size: 18px;
-      font-weight: bold;
-      color: #1a253f;
-      border-top: 2px solid #cbd5e0;
-      padding-top: 8px;
-      margin-top: 8px;
-    }
-
-    .customer-info-box {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-bottom: 12px;
-    }
-
-    .customer-info-box input {
-      padding: 8px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-      font-size: 13px;
-      outline: none;
-    }
-
-    .discount-box {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin: 10px 0;
-    }
-
-    .discount-box input {
-      width: 100px;
-      padding: 6px;
-      border: 1px solid #cbd5e0;
-      border-radius: 4px;
-    }
-
-    .btn-save-bill {
-      width: 100%;
-      background-color: #2563eb;
-      color: #ffffff;
-      border: none;
-      padding: 14px;
-      border-radius: 6px;
-      font-weight: bold;
-      font-size: 16px;
-      cursor: pointer;
-      margin-top: 15px;
-    }
-
-    .form-grid-4 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)) auto;
-      gap: 10px;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .form-grid-4 input, .form-grid-4 select {
-      padding: 9px;
-      border: 1px solid #cbd5e0;
-      border-radius: 6px;
-    }
-
-    .sales-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 15px;
-    }
-
-    .sales-summary-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .sales-card {
-      padding: 15px;
-      border-radius: 8px;
-      font-weight: bold;
-    }
-
-    .sales-card.total { background: #38ef7d; color: #0f5132; font-size: 18px; }
-    .sales-card.vape { background: #eef2ff; color: #3730a3; border: 1px solid #c7d2fe; }
-    .sales-card.mobile { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; }
-    .sales-card.expense { background: #fff5f5; color: #c53030; border: 1px solid #fed7d7; }
-
-    .sales-card div {
-      font-size: 13px;
-      font-weight: normal;
-      margin-bottom: 4px;
-    }
-
-    .badge-vape { background: #e0e7ff; color: #3730a3; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .badge-mobile { background: #dcfce7; color: #166534; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .badge-status-pending { background: #feebc8; color: #744210; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-    .badge-status-paid { background: #c6f6d5; color: #22543d; padding: 2px 6px; border-radius: 4px; font-size: 11px; font-weight: bold; }
-
-    .btn-clear-sales {
-      background: #e53e3e;
-      color: white;
-      border: none;
-      padding: 8px 14px;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .stock-badge {
-      background: #feebc8;
-      color: #744210;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-weight: 600;
-      font-size: 12px;
-    }
-
-    .stock-badge-low {
-      background: #fed7d7;
-      color: #9b2c2c;
-      padding: 4px 8px;
-      border-radius: 4px;
-      font-weight: 700;
-      font-size: 12px;
-      animation: pulse 1.5s infinite;
-    }
-
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.6; }
-      100% { opacity: 1; }
-    }
-
-    .vape-dropdown-item {
-      padding: 10px;
-      border-bottom: 1px solid #edf2f7;
-      cursor: pointer;
-      font-size: 13px;
-      transition: background 0.15s;
-    }
-    .vape-dropdown-item:hover, .vape-dropdown-item.selected {
-      background: #eef2ff !important;
-      color: #3730a3;
-    }
-
-    @media screen and (max-width: 768px) {
-      body { flex-direction: column; }
-      .sidebar { width: 100%; padding: 15px; }
-      .nav-menu { flex-direction: row; flex-wrap: wrap; gap: 5px; }
-      .nav-menu li { flex: 1 1 calc(50% - 10px); }
-      .billing-grid { grid-template-columns: 1fr; }
-      .form-grid-4 { grid-template-columns: 1fr; }
-    }
-  </style>
+@media screen and (max-width: 768px) {
+    body { flex-direction: column; }
+    .sidebar { width: 100%; padding: 15px; }
+    .nav-menu { flex-direction: row; flex-wrap: wrap; gap: 5px; }
+    .nav-menu li { flex: 1 1 calc(50% - 10px); }
+    .billing-grid { grid-template-columns: 1fr; }
+    .form-grid-4 { grid-template-columns: 1fr; }
+}
+</style>
 </head>
 <body>
 
-  <!-- Login Modal Overlay -->
-  <div id="login-overlay">
+<!-- Login Modal Overlay -->
+<div id="login-overlay">
     <div class="login-box">
-      <h2>🏪 ALI MOBILES</h2>
-      <p>Secure POS Login Portal</p>
-      <select id="login-role">
-        <option value="user">User (Hamza)</option>
-        <option value="admin">Admin</option>
-      </select>
-      <input type="password" id="login-pass" placeholder="Enter Password..." onkeydown="handleLoginEnter(event)">
-      <button class="btn-login" onclick="validateLogin()">Login to POS</button>
+        <h2>🏪 ALI MOBILES</h2>
+        <p>Secure POS Login Portal</p>
+        <select id="login-role">
+            <option value="user">User (Hamza)</option>
+            <option value="admin">Admin</option>
+        </select>
+        <input type="password" id="login-pass" placeholder="Enter Password..." onkeydown="handleLoginEnter(event)">
+        <button class="btn-login" onclick="validateLogin()">Login to POS</button>
     </div>
-  </div>
+</div>
 
-  <!-- Sidebar -->
-  <div class="sidebar">
+<!-- Sidebar -->
+<div class="sidebar">
     <h2>🏪 ALI MOBILES</h2>
     <div class="user-info">
-      <div id="display-user">👤 User: Not Logged In</div>
-      <span>☁️ Shift: 1 PM - 1:30 AM</span>
+        <div id="display-user">👤 User: Not Logged In</div>
+        <span>☁️ Shift: 1 PM - 1:30 AM</span>
     </div>
-    
     <ul class="nav-menu">
-      <li class="nav-item active"><button onclick="switchTab(this, 'billing')">🛒 Billing Counter</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'stock-mgr')">📦 Stock & Accessories</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'vape')">💨 Vape & Refill Corner</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'vape-stocks')">🧪 E-Liquid Stocks</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'udhaar')">📖 Udhaar / Khata</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'banking')">💳 JazzCash / EasyPaisa</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'sales')">💵 Daily Sales & Cash</button></li>
-      <li class="nav-item"><button onclick="switchTab(this, 'expenses')">🧾 Shop Expenses</button></li>
-      <li class="nav-item" id="menu-admin-tab"><button onclick="switchTab(this, 'admin')">📊 Admin & Reports</button></li>
+        <li class="nav-item active"><button onclick="switchTab(this, 'billing')">🛒 Billing Counter</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'stock-mgr')">📦 Stock & Accessories</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'vape')">💨 Vape & Refill Corner</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'vape-stocks')">🧪 E-Liquid Stocks</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'udhaar')">📖 Udhaar / Khata</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'banking')">💳 JazzCash / EasyPaisa</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'sales')">💵 Daily Sales & Cash</button></li>
+        <li class="nav-item"><button onclick="switchTab(this, 'expenses')">🧾 Shop Expenses</button></li>
+        <li class="nav-item" id="menu-admin-tab"><button onclick="switchTab(this, 'admin')">📊 Admin & Reports</button></li>
     </ul>
-
     <div class="sidebar-footer">
-      <button class="btn-admin" onclick="logoutSystem()">🔒 Logout / Lock System</button>
-      <button class="btn-password" onclick="changePasswordPrompt()">🔑 Change Password</button>
+        <button class="btn-admin" onclick="logoutSystem()">🔒 Logout / Lock System</button>
+        <button class="btn-password" onclick="changePasswordPrompt()">🔑 Change Password</button>
     </div>
-  </div>
+</div>
 
-  <!-- Main Content -->
-  <div class="main-content">
+<!-- Main Content -->
+<div class="main-content">
     <div class="top-header">
-      <h1 id="page-title">Billing Counter</h1>
-      <div class="date-badge">📅 Business Date: 2026-08-11 | ☁️ Cloud Sync: <span id="syncStatus" style="color: orange;">Connecting...</span></div>
+        <h1 id="page-title">Billing Counter</h1>
+        <div class="date-badge">
+            📅 Business Date: <input type="date" id="business-date-picker" onchange="updateBusinessDate(this.value)"> 
+            | ☁️ Cloud Sync: <span id="syncStatus" style="color: orange;">Connecting...</span>
+        </div>
     </div>
 
     <!-- 1. Billing Counter Tab -->
     <div id="billing" class="tab-content active">
-      <div class="billing-grid">
-        <div class="card-panel">
-          <h3>Select Accessories / Scan Barcode (Press ENTER)</h3>
-          <div class="search-box">
-            <input type="text" id="search-input" placeholder="Type accessory/code and press ENTER to add..." onkeyup="filterProducts(event)">
-          </div>
-
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Code</th>
-                  <th>Name</th>
-                  <th>Stock</th>
-                  <th>Price</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <tbody id="inventory-list"></tbody>
-            </table>
-          </div>
+        <div class="billing-grid">
+            <div class="card-panel">
+                <h3>Select Accessories / Scan Barcode (Press ENTER)</h3>
+                <div class="search-box">
+                    <input type="text" id="search-input" placeholder="Type accessory/code and press ENTER to add..." onkeyup="filterProducts(event)">
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Code</th>
+                                <th>Name</th>
+                                <th>Stock</th>
+                                <th>Price</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="inventory-list"></tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="card-panel">
+                <h3>Current Customer Bill</h3>
+                <div class="customer-info-box">
+                    <input type="text" id="bill-customer-name" placeholder="Customer Name (Optional)">
+                    <input type="text" id="bill-customer-phone" placeholder="Phone Number (Optional)">
+                </div>
+                <div class="table-responsive">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Sale Price</th>
+                                <th>Qty / ml</th>
+                                <th>Total</th>
+                                <th>Remove</th>
+                            </tr>
+                        </thead>
+                        <tbody id="cart-list"></tbody>
+                    </table>
+                </div>
+                <div class="cart-summary">
+                    <div class="summary-row">
+                        <span>Subtotal:</span>
+                        <span id="subtotal">Rs. 0</span>
+                    </div>
+                    <div class="discount-box">
+                        <label>Extra Discount (Rs.):</label>
+                        <input type="number" id="flat-discount" value="0" min="0" oninput="updateCartUI()">
+                    </div>
+                    <div class="summary-row total">
+                        <span>Grand Total:</span>
+                        <span id="grand-total">Rs. 0</span>
+                    </div>
+                </div>
+                <button class="btn-save-bill" id="btn-save" onclick="saveBill()">💾 Save Bill</button>
+            </div>
         </div>
-
-        <div class="card-panel">
-          <h3>Current Customer Bill</h3>
-          
-          <div class="customer-info-box">
-            <input type="text" id="bill-customer-name" placeholder="Customer Name (Optional)">
-            <input type="text" id="bill-customer-phone" placeholder="Phone Number (Optional)">
-          </div>
-
-          <div class="table-responsive">
-            <table>
-              <thead>
-                <tr>
-                  <th>Item</th>
-                  <th>Sale Price</th>
-                  <th>Qty / ml</th>
-                  <th>Total</th>
-                  <th>Remove</th>
-                </tr>
-              </thead>
-              <tbody id="cart-list"></tbody>
-            </table>
-          </div>
-
-          <div class="cart-summary">
-            <div class="summary-row">
-              <span>Subtotal:</span>
-              <span id="subtotal">Rs. 0</span>
-            </div>
-            
-            <div class="discount-box">
-              <label>Extra Discount (Rs.):</label>
-              <input type="number" id="flat-discount" value="0" min="0" oninput="updateCartUI()">
-            </div>
-
-            <div class="summary-row total">
-              <span>Grand Total:</span>
-              <span id="grand-total">Rs. 0</span>
-            </div>
-          </div>
-
-          <button class="btn-save-bill" id="btn-save" onclick="saveBill()">💾 Save Bill</button>
-        </div>
-      </div>
     </div>
 
     <!-- 2. Stock / Accessories Manager Tab -->
     <div id="stock-mgr" class="tab-content">
-      <div class="card-panel">
-        <h3 id="inv-form-title">➕ Add New Item / Mobile Accessory to Stock</h3>
-        <div class="form-grid-4">
-          <input type="hidden" id="edit-inv-code-identifier" value="">
-          <input type="text" id="inv-code" placeholder="Barcode / Code (e.g. 1001)">
-          <input type="text" id="inv-name" placeholder="Item Name (e.g. Samsung 25W Charger)">
-          <input type="number" id="inv-cost" placeholder="Purchase Cost (Rs.)">
-          <input type="number" id="inv-price" placeholder="Sale Price (Rs.)">
-          <input type="number" id="inv-qty" placeholder="Stock Qty">
-          <button class="btn-add-item" id="inv-submit-btn" style="grid-column: span 5; padding: 10px;" onclick="addNewInventoryItem()">+ Save to Stock & Billing</button>
+        <div class="card-panel">
+            <h3 id="inv-form-title">➕ Add New Item / Mobile Accessory to Stock</h3>
+            <div class="form-grid-4">
+                <input type="hidden" id="edit-inv-code-identifier" value="">
+                <input type="text" id="inv-code" placeholder="Barcode / Code (e.g. 1001)">
+                <input type="text" id="inv-name" placeholder="Item Name (e.g. Samsung 25W Charger / Vape Kit)">
+                <input type="number" id="inv-cost" placeholder="Purchase Cost (Rs.)">
+                <input type="number" id="inv-price" placeholder="Sale Price (Rs.)">
+                <input type="number" id="inv-qty" placeholder="Stock Qty">
+                <button class="btn-add-item" id="inv-submit-btn" style="grid-column: span 5; padding: 10px;" onclick="addNewInventoryItem()">+ Save to Stock & Billing</button>
+            </div>
         </div>
-      </div>
-
-      <div class="card-panel">
-        <div class="sales-header">
-          <h3>Current Shop Inventory & Accessories List</h3>
+        <div class="card-panel">
+            <div class="sales-header">
+                <h3>Current Shop Inventory & Accessories List</h3>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Code</th>
+                            <th>Item Name</th>
+                            <th>Cost Price</th>
+                            <th>Sale Price</th>
+                            <th>Remaining Stock</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="full-inventory-list"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Code</th>
-                <th>Item Name</th>
-                <th>Cost Price</th>
-                <th>Sale Price</th>
-                <th>Remaining Stock</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="full-inventory-list"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- 3. Vape & Refill Corner Tab (Billing Only) -->
     <div id="vape" class="tab-content">
-      <!-- 1. Custom ML Refill Counter -->
-      <div class="card-panel" style="border: 2px solid #2563eb;">
-        <h3 style="color: #2563eb;">⚡ Custom ML Refill Counter (Rate: Rs. 100 / ml)</h3>
-        <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">Flavor search karein, arrow keys ya enter se select karein, ml enter karein taake price khud ban jaye.</p>
-        
-        <div class="form-grid-4" style="grid-template-columns: 2fr 1fr 1fr auto;">
-          <input type="hidden" id="vape-selected-flavor-name" value="">
-          <div style="position: relative;">
-            <input type="text" id="vape-flavor-search" placeholder="🔍 Search Flavor..." oninput="filterVapeSearchDropdown()" onkeydown="handleVapeSearchKeydown(event)" autocomplete="off">
-            <div id="vape-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e0; border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
-          </div>
-          <input type="number" id="vape-ml-qty" placeholder="Enter ml (e.g. 2.5)" step="0.1" min="0.1" oninput="calculateVapePrice()" onkeydown="handleCustomVapeEnter(event)">
-          <input type="number" id="vape-total-price" placeholder="Price (Rs.)" onkeydown="handleCustomVapeEnter(event)">
-          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addCustomVapeRefill()">+ Add to Bill</button>
-        </div>
-        <div id="vape-selected-display" style="font-size: 13px; color: #2563eb; font-weight: 600; margin-top: 6px;"></div>
-      </div>
-
-      <!-- 2. Vape & Refill Corner - Current Bill Panel -->
-      <div class="card-panel" style="border: 2px dashed #3730a3;">
-        <h3 style="color: #3730a3;">🛒 Vape & Refill Corner - Current Bill</h3>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Flavor / Item</th>
-                <th>Price per ml</th>
-                <th>Qty (ml)</th>
-                <th>Total</th>
-                <th>Remove</th>
-              </tr>
-            </thead>
-            <tbody id="vape-cart-list"></tbody>
-          </table>
+        <!-- E-Liquid ML Refill Counter -->
+        <div class="card-panel" style="border: 2px solid #2563eb;">
+            <h3 style="color: #2563eb;">⚡ Custom ML Refill Counter (Rate: Rs. 100 / ml)</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">Flavor search karein, arrow keys ya enter se select karein, ml enter karein taake price khud ban jaye.</p>
+            <div class="form-grid-4" style="grid-template-columns: 2fr 1fr 1fr auto;">
+                <input type="hidden" id="vape-selected-flavor-name" value="">
+                <div style="position: relative;">
+                    <input type="text" id="vape-flavor-search" placeholder="🔍 Search Flavor..." oninput="filterVapeSearchDropdown()" onkeydown="handleVapeSearchKeydown(event)" autocomplete="off">
+                    <div id="vape-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e0; border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+                <input type="number" id="vape-ml-qty" placeholder="Enter ml (e.g. 2.5)" step="0.1" min="0.1" oninput="calculateVapePrice()" onkeydown="handleCustomVapeEnter(event)">
+                <input type="number" id="vape-total-price" placeholder="Price (Rs.)" onkeydown="handleCustomVapeEnter(event)">
+                <button class="btn-add-item" style="padding: 10px 15px;" onclick="addCustomVapeRefill()">+ Add Refill</button>
+            </div>
+            <div id="vape-selected-display" style="font-size: 13px; color: #2563eb; font-weight: 600; margin-top: 6px;"></div>
         </div>
 
-        <div class="cart-summary">
-          <div class="summary-row">
-            <span>Subtotal:</span>
-            <span id="vape-subtotal">Rs. 0</span>
-          </div>
-          <div class="discount-box">
-            <label>Extra Discount (Rs.):</label>
-            <input type="number" id="vape-flat-discount" value="0" min="0" oninput="updateVapeCartUI()">
-          </div>
-          <div class="summary-row total">
-            <span>Grand Total:</span>
-            <span id="vape-grand-total">Rs. 0</span>
-          </div>
+        <!-- Hardware & Accessories Counter inside Vape Tab (Updated with Search + Price) -->
+        <div class="card-panel" style="border: 2px solid #059669; margin-top: 20px;">
+            <h3 style="color: #059669;">🔌 Hardware & Accessories Counter (Coils, Pods, etc.)</h3>
+            <p style="color: #64748b; font-size: 13px; margin-bottom: 12px;">Vape hardware ya accessories select karein, price aur quantity check/adjust karein aur bill mein add karein.</p>
+            <div class="form-grid-4" style="grid-template-columns: 2fr 1fr 1fr auto;">
+                <div style="position: relative;">
+                    <input type="text" id="vape-acc-search" placeholder="🔍 Search Hardware / Acc..." oninput="filterVapeAccDropdown()" onkeydown="handleVapeAccSearchKeydown(event)" autocomplete="off">
+                    <input type="hidden" id="vape-selected-acc-id" value="">
+                    <input type="hidden" id="vape-selected-acc-name" value="">
+                    <input type="hidden" id="vape-selected-acc-cost" value="0">
+                    <div id="vape-acc-search-results" style="position: absolute; top: 100%; left: 0; right: 0; background: white; border: 1px solid #cbd5e0; border-radius: 0 0 6px 6px; max-height: 180px; overflow-y: auto; z-index: 10; display: none; box-shadow: 0 4px 6px rgba(0,0,0,0.1);"></div>
+                </div>
+                <input type="number" id="vape-selected-acc-price" placeholder="Price (Rs.)" onkeydown="handleCustomAccEnter(event)">
+                <input type="number" id="vape-acc-qty" placeholder="Qty" value="1" min="1" onkeydown="handleCustomAccEnter(event)">
+                <button class="btn-add-item" style="padding: 10px 15px; background-color: #059669; color: white;" onclick="addVapeAccessoryToCart()">+ Add Accessory</button>
+            </div>
+            <div id="vape-acc-selected-display" style="font-size: 13px; color: #059669; font-weight: 600; margin-top: 6px;"></div>
         </div>
 
-        <button class="btn-save-bill" style="background-color: #3730a3;" onclick="saveVapeBill()">💾 Save Vape Bill</button>
-      </div>
+        <div class="card-panel" style="border: 2px dashed #3730a3; margin-top: 20px;">
+            <h3 style="color: #3730a3;">🛒 Vape & Refill Corner - Current Bill</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Flavor / Item</th>
+                            <th>Price / Unit</th>
+                            <th>Qty / ml</th>
+                            <th>Total</th>
+                            <th>Remove</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vape-cart-list"></tbody>
+                </table>
+            </div>
+            <div class="cart-summary">
+                <div class="summary-row">
+                    <span>Subtotal:</span>
+                    <span id="vape-subtotal">Rs. 0</span>
+                </div>
+                <div class="discount-box">
+                    <label>Extra Discount (Rs.):</label>
+                    <input type="number" id="vape-flat-discount" value="0" min="0" oninput="updateVapeCartUI()">
+                </div>
+                <div class="summary-row total">
+                    <span>Grand Total:</span>
+                    <span id="vape-grand-total">Rs. 0</span>
+                </div>
+            </div>
+            <button class="btn-save-bill" style="background-color: #3730a3;" onclick="saveVapeBill()">💾 Save Vape Bill</button>
+        </div>
     </div>
 
     <!-- 4. E-Liquid Stocks & Tracking Manager Tab -->
     <div id="vape-stocks" class="tab-content">
-      <div class="card-panel">
-        <h3 id="vape-form-title">➕ Add / Update Juice Stock</h3>
-        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
-          <input type="hidden" id="edit-vape-id-identifier" value="">
-          <input type="text" id="new-flavor-name" placeholder="Flavor Name (e.g. Nasty Mango)">
-          <input type="number" id="new-flavor-bottles" placeholder="Bottles Qty" step="0.1">
-          <input type="number" id="new-flavor-mlperbottle" placeholder="Size ml (Default: 30)">
-          <button class="btn-add-item" id="vape-submit-btn" style="padding: 10px 15px;" onclick="addFlavorToStock()">Save Stock</button>
+        <!-- Juice Stock Form -->
+        <div class="card-panel">
+            <h3 id="vape-form-title">➕ Add / Update Juice Stock & Purchase Cost</h3>
+            <div class="form-grid-4" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr auto;">
+                <input type="hidden" id="edit-vape-id-identifier" value="">
+                <input type="text" id="new-flavor-name" placeholder="Flavor Name">
+                <input type="number" id="new-flavor-cost" placeholder="Purchase Cost per Bottle (Rs.)">
+                <input type="number" id="new-flavor-bottles" placeholder="Bottles Qty" step="0.1">
+                <input type="number" id="new-flavor-mlperbottle" placeholder="Size ml (Default: 30)">
+                <input type="date" id="new-flavor-purchase-date" placeholder="Purchase Date">
+                <button class="btn-add-item" id="vape-submit-btn" style="grid-column: span 6; padding: 10px;" onclick="addFlavorToStock()">Save Juice/Stock</button>
+            </div>
         </div>
-      </div>
+        
+        <!-- Juice Stock Table -->
+        <div class="card-panel">
+            <h3>📦 E-Liquids & Refill Stock Tracking</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Flavor Name</th>
+                            <th>Purchase Cost</th>
+                            <th>Bottle Size</th>
+                            <th>Total Remaining ML</th>
+                            <th>Stock Breakdown</th>
+                            <th>Purchase Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="vape-stock-list"></tbody>
+                </table>
+            </div>
+        </div>
 
-      <div class="card-panel">
-        <h3>📦 E-Liquids & Refill Stock Tracking</h3>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Flavor Name</th>
-                <th>Bottle Size</th>
-                <th>Total Remaining ML</th>
-                <th>Stock Breakdown</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="vape-stock-list"></tbody>
-          </table>
+        <!-- Hardware & Accessories Stock Section -->
+        <div class="card-panel" style="margin-top: 30px; border-top: 3px solid #2563eb;">
+            <h3 id="acc-form-title" style="color: #2563eb;">➕ Add / Update Hardware & Accessories Stock</h3>
+            <div class="form-grid-4" style="grid-template-columns: 1.5fr 1fr 1fr 1fr 1.2fr auto;">
+                <input type="hidden" id="edit-acc-id-identifier" value="">
+                <input type="text" id="acc-item-name" placeholder="Accessory / Hardware Name (e.g. Coils, Pods)">
+                <input type="number" id="acc-cost" placeholder="Purchase Cost (Rs.)">
+                <input type="number" id="acc-price" placeholder="Sale Price (Rs.)">
+                <input type="number" id="acc-qty" placeholder="Quantity">
+                <input type="date" id="acc-purchase-date" placeholder="Purchase Date">
+                <button class="btn-add-item" id="acc-submit-btn" style="grid-column: span 6; padding: 10px; background-color: #2563eb; color: white;" onclick="addAccessoryStock()">Save Accessory Stock</button>
+            </div>
         </div>
-      </div>
+
+        <div class="card-panel">
+            <h3>🔌 Hardware & Accessories Stock Table</h3>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Item Name</th>
+                            <th>Purchase Cost</th>
+                            <th>Sale Price</th>
+                            <th>Remaining Qty</th>
+                            <th>Purchase Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accessories-stock-list"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 
     <!-- 5. Udhaar / Khata Tab -->
     <div id="udhaar" class="tab-content">
-      <div class="card-panel">
-        <h3>📖 Professional Customer Udhaar / Khata Entry Form</h3>
-        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
-          <input type="text" id="udhaar-name" placeholder="Customer Name (e.g. Ali Ahmed)">
-          <input type="text" id="udhaar-phone" placeholder="Phone Number (e.g. 03001234567)">
-          <input type="number" id="udhaar-amount" placeholder="Udhaar Amount (Rs.)">
-          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addUdhaarEntry()">+ Save Khata</button>
+        <div class="card-panel">
+            <h3>📖 Professional Customer Udhaar / Khata Entry Form</h3>
+            <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 1.5fr auto;">
+                <input type="text" id="udhaar-name" placeholder="Customer Name (e.g. Ali Ahmed)">
+                <input type="text" id="udhaar-phone" placeholder="Phone Number (e.g. 03001234567)">
+                <input type="number" id="udhaar-amount" placeholder="Udhaar Amount (Rs.)">
+                <button class="btn-add-item" style="padding: 10px 15px;" onclick="addUdhaarEntry()">+ Save Khata</button>
+            </div>
         </div>
-      </div>
-
-      <div class="card-panel">
-        <div class="sales-header">
-          <h3>Customer Udhaar Ledger</h3>
-          <span class="stock-badge" id="total-udhaar-badge">Total Udhaar: Rs. 0</span>
+        <div class="card-panel">
+            <div class="sales-header">
+                <h3>Customer Udhaar Ledger</h3>
+                <span class="stock-badge" id="total-udhaar-badge">Total Udhaar: Rs. 0</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Customer Name</th>
+                            <th>Phone Number</th>
+                            <th>Amount</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="udhaar-list"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Customer Name</th>
-                <th>Phone Number</th>
-                <th>Amount</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody id="udhaar-list"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- 6. JazzCash / EasyPaisa Tab -->
     <div id="banking" class="tab-content">
-      <div class="card-panel">
-        <h3>💳 Mobile Account Transaction Form</h3>
-        <div class="form-grid-4">
-          <select id="bank-type">
-            <option value="JazzCash">JazzCash</option>
-            <option value="EasyPaisa">EasyPaisa</option>
-          </select>
-          <select id="bank-action">
-            <option value="Cash-In">Cash-In (Deposit)</option>
-            <option value="Cash-Out">Cash-Out (Withdrawal)</option>
-            <option value="Load / Bill">Mobile Load / Utility Bill</option>
-          </select>
-          <input type="number" id="bank-amount" placeholder="Transaction Amount (Rs.)">
-          <input type="number" id="bank-commission" placeholder="Commission Earned (Rs.)">
-          <button class="btn-add-item" style="grid-column: span 4; padding: 10px;" onclick="addBankTransaction()">+ Record Transaction</button>
+        <div class="card-panel">
+            <h3>💳 Mobile Account Transaction Form</h3>
+            <div class="form-grid-4">
+                <select id="bank-type">
+                    <option value="JazzCash">JazzCash</option>
+                    <option value="EasyPaisa">EasyPaisa</option>
+                </select>
+                <select id="bank-action">
+                    <option value="Cash-In">Cash-In (Deposit)</option>
+                    <option value="Cash-Out">Cash-Out (Withdrawal)</option>
+                    <option value="Load / Bill">Mobile Load / Utility Bill</option>
+                </select>
+                <input type="number" id="bank-amount" placeholder="Transaction Amount (Rs.)">
+                <input type="number" id="bank-commission" placeholder="Commission Earned (Rs.)">
+                <button class="btn-add-item" style="grid-column: span 4; padding: 10px;" onclick="addBankTransaction()">+ Record Transaction</button>
+            </div>
         </div>
-      </div>
-
-      <div class="card-panel">
-        <div class="sales-header">
-          <h3>JazzCash & EasyPaisa Ledger History</h3>
-          <span class="stock-badge" id="total-commission-badge">Total Commission: Rs. 0</span>
+        <div class="card-panel">
+            <div class="sales-header">
+                <h3>JazzCash & EasyPaisa Ledger History</h3>
+                <span class="stock-badge" id="total-commission-badge">Total Commission: Rs. 0</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Time</th>
+                            <th>Service</th>
+                            <th>Type</th>
+                            <th>Amount</th>
+                            <th>Commission</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="bank-history-list"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Service</th>
-                <th>Type</th>
-                <th>Amount</th>
-                <th>Commission</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="bank-history-list"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- 7. Daily Sales & Cash Tab -->
     <div id="sales" class="tab-content">
-      <div class="card-panel">
-        <div class="sales-header">
-          <h3>Daily Sales Register</h3>
-          <button class="btn-clear-sales" onclick="clearSalesHistory()">🗑️ Reset Today Sales</button>
+        <div class="card-panel">
+            <div class="sales-header">
+                <h3>Daily Sales Register (Selected Business Date)</h3>
+                <button class="btn-clear-sales" onclick="clearSalesHistory()">🗑️ Reset Selected Date Sales</button>
+            </div>
+            <div class="sales-summary-grid">
+                <div class="sales-card total">
+                    <div>Total Cash Collected</div>
+                    <span id="total-daily-cash">Rs. 0</span>
+                </div>
+                <div class="sales-card vape">
+                    <div>💨 Vape & Refill Sales</div>
+                    <span id="vape-daily-cash">Rs. 0</span>
+                </div>
+                <div class="sales-card mobile">
+                    <div>📱 Mobile & Accessories Sales</div>
+                    <span id="mobile-daily-cash">Rs. 0</span>
+                </div>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Customer / Details</th>
+                            <th>Category</th>
+                            <th>Items Sold</th>
+                            <th>Amount Paid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="sales-history-list"></tbody>
+                </table>
+            </div>
         </div>
-
-        <div class="sales-summary-grid">
-          <div class="sales-card total">
-            <div>Total Cash Collected Today</div>
-            <span id="total-daily-cash">Rs. 0</span>
-          </div>
-          <div class="sales-card vape">
-            <div>💨 Vape & Refill Sales</div>
-            <span id="vape-daily-cash">Rs. 0</span>
-          </div>
-          <div class="sales-card mobile">
-            <div>📱 Mobile & Accessories Sales</div>
-            <span id="mobile-daily-cash">Rs. 0</span>
-          </div>
-        </div>
-
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Time</th>
-                <th>Customer / Details</th>
-                <th>Category</th>
-                <th>Items Sold</th>
-                <th>Amount Paid</th>
-              </tr>
-            </thead>
-            <tbody id="sales-history-list"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- 8. Shop Expenses Tab -->
     <div id="expenses" class="tab-content">
-      <div class="card-panel">
-        <h3>🧾 Add Shop Expense Entry</h3>
-        <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 2fr auto;">
-          <input type="text" id="expense-title" placeholder="Expense Reason (e.g. Bijli Bill / Chai)">
-          <input type="number" id="expense-amount" placeholder="Amount (Rs.)">
-          <input type="text" id="expense-note" placeholder="Extra Note (Optional)">
-          <button class="btn-add-item" style="padding: 10px 15px;" onclick="addExpenseEntry()">+ Save Expense</button>
+        <div class="card-panel">
+            <h3>🧾 Add Shop Expense Entry</h3>
+            <div class="form-grid-4" style="grid-template-columns: 2fr 1.5fr 2fr auto;">
+                <input type="text" id="expense-title" placeholder="Expense Reason (e.g. Bijli Bill / Chai)">
+                <input type="number" id="expense-amount" placeholder="Amount (Rs.)">
+                <input type="text" id="expense-note" placeholder="Extra Note (Optional)">
+                <button class="btn-add-item" style="padding: 10px 15px;" onclick="addExpenseEntry()">+ Save Expense</button>
+            </div>
         </div>
-      </div>
-
-      <div class="card-panel">
-        <div class="sales-header">
-          <h3>Shop Expenses Ledger</h3>
-          <span class="stock-badge" id="total-expense-badge">Total Expenses: Rs. 0</span>
+        <div class="card-panel">
+            <div class="sales-header">
+                <h3>Shop Expenses Ledger (Selected Business Date)</h3>
+                <span class="stock-badge" id="total-expense-badge">Total Expenses: Rs. 0</span>
+            </div>
+            <div class="table-responsive">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Expense Reason</th>
+                            <th>Note</th>
+                            <th>Amount</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="expense-list"></tbody>
+                </table>
+            </div>
         </div>
-        <div class="table-responsive">
-          <table>
-            <thead>
-              <tr>
-                <th>Date</th>
-                <th>Expense Reason</th>
-                <th>Note</th>
-                <th>Amount</th>
-                <th>Action</th>
-              </tr>
-            </thead>
-            <tbody id="expense-list"></tbody>
-          </table>
-        </div>
-      </div>
     </div>
 
     <!-- 9. Admin & Reports Tab -->
     <div id="admin" class="tab-content">
-      <div class="sales-summary-grid">
-        <div class="sales-card total">
-          <div>Total Overall Sales</div>
-          <span id="admin-total-sales">Rs. 0</span>
+        <div class="sales-summary-grid">
+            <div class="sales-card total">
+                <div>Gross Revenue (Selected Date)</div>
+                <span id="admin-total-sales">Rs. 0</span>
+            </div>
+            <div class="sales-card mobile">
+                <div>📱 Mobile Accessories Profit</div>
+                <span id="admin-mobile-profit">Rs. 0</span>
+            </div>
+            <div class="sales-card vape">
+                <div>💨 Vape & E-Liquid Profit</div>
+                <span id="admin-vape-profit">Rs. 0</span>
+            </div>
+            <div class="sales-card expense">
+                <div>Shop Expenses (Selected Date)</div>
+                <span id="admin-total-expenses">Rs. 0</span>
+            </div>
         </div>
-        <div class="sales-card expense">
-          <div>Total Overall Expenses</div>
-          <span id="admin-total-expenses">Rs. 0</span>
+        <div class="sales-summary-grid">
+            <div class="sales-card vape" style="background: #e6fffa; color: #234e52; border: 1px solid #b2f5ea; grid-column: span 2;">
+                <div>⭐ Net Profit (Mobile Profit + Vape Profit + JazzCash Comm - Expenses)</div>
+                <span id="admin-net-profit" style="font-size: 20px;">Rs. 0</span>
+            </div>
+            <div class="sales-card mobile" style="grid-column: span 2;">
+                <div>Active Udhaar Balance</div>
+                <span id="admin-total-udhaar" style="font-size: 20px;">Rs. 0</span>
+            </div>
         </div>
-        <div class="sales-card vape">
-          <div>Net Profit Estimate</div>
-          <span id="admin-net-profit">Rs. 0</span>
+        <div class="card-panel">
+            <h3>📊 Comprehensive Financial & Management Reports</h3>
+            <p style="color: #666; font-size: 14px; line-height: 1.6;">
+                Aap upar date change karke kisi bhi purani date ke reports aur sales check kar sakte hain.
+            </p>
         </div>
-        <div class="sales-card mobile">
-          <div>Active Udhaar Balance</div>
-          <span id="admin-total-udhaar">Rs. 0</span>
-        </div>
-      </div>
-
-      <div class="card-panel">
-        <h3>📊 Comprehensive Financial & Management Reports</h3>
-        <p style="color: #666; font-size: 14px; line-height: 1.6;">
-          Yahan aap ko dukaan ka live aur professional summary overview milta hai jo kay Sales, Expenses, Net Profit, aur Khata records ko real-time mein calculate karta hai. Saara data Firebase Cloud par secure rehta hai taake mobile aur laptop dono par live chale.
-        </p>
-      </div>
     </div>
-  </div>
+</div>
 
-  <script>
-    // Firebase Configuration Integration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCEBlfH3gAdOGawxmamauJzITlYbcmWvMc",
-      authDomain: "alimobilespos.firebaseapp.com",
-      databaseURL: "https://alimobilespos-default-rtdb.firebaseio.com",
-      projectId: "alimobilespos",
-      storageBucket: "alimobilespos.firebasestorage.app",
-      messagingSenderId: "1068601974720",
-      appId: "1:1068601974720:web:ec3de574ade978b128f225",
-      measurementId: "G-9MN85FFYYP"
-    };
+<script>
+// Firebase Configuration Integration
+const firebaseConfig = {
+    apiKey: "AIzaSyCEBlfH3gAdOGawxmamauJzITlYbcmWvMc",
+    authDomain: "alimobilespos.firebaseapp.com",
+    databaseURL: "https://alimobilespos-default-rtdb.firebaseio.com",
+    projectId: "alimobilespos",
+    storageBucket: "alimobilespos.firebasestorage.app",
+    messagingSenderId: "1068601974720",
+    appId: "1:1068601974720:web:ec3de574ade978b128f225",
+    measurementId: "G-9MN85FFYYP"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
 
-    firebase.initializeApp(firebaseConfig);
-    const db = firebase.database();
+// Connection Status Check
+db.ref('.info/connected').on('value', (snap) => {
+    if (snap.val() === true) {
+        document.getElementById('syncStatus').innerText = "Live Connected 🟢";
+        document.getElementById('syncStatus').style.color = "green";
+    } else {
+        document.getElementById('syncStatus').innerText = "Offline 🔴";
+        document.getElementById('syncStatus').style.color = "red";
+    }
+});
 
-    // Connection Status Check
-    db.ref('.info/connected').on('value', (snap) => {
-        if (snap.val() === true) {
-            document.getElementById('syncStatus').innerText = "Live Connected 🟢";
-            document.getElementById('syncStatus').style.color = "green";
-        } else {
-            document.getElementById('syncStatus').innerText = "Offline 🔴";
-            document.getElementById('syncStatus').style.color = "red";
+let cart = [];
+let vapeCart = [];
+let currentRole = null;
+let selectedDropdownIndex = -1;
+let selectedAccDropdownIndex = -1;
+
+// Global Business Date Management
+let currentBusinessDate = new Date().toISOString().split('T')[0];
+
+// Data Variables
+let salesHistory = [];
+let inventory = [];
+let vapeStock = [];
+let accessoriesStock = []; 
+let udhaarList = [];
+let bankHistory = [];
+let expenseList = [];
+let passwords = { admin: '1234', user: '0000' };
+
+// Realtime Cloud Sync Loaders on Startup
+window.onload = function() {
+    let datePicker = document.getElementById('business-date-picker');
+    if(datePicker) {
+        datePicker.value = currentBusinessDate;
+    }
+
+    db.ref('posData/passwords').once('value', (snapshot) => {
+        if(snapshot.exists()) {
+            passwords = { ...passwords, ...snapshot.val() };
         }
     });
 
-    let cart = [];
-    let vapeCart = [];
-    let currentRole = null;
-    let selectedDropdownIndex = -1;
-    
-    // Data Variables
-    let salesHistory = [];
-    let inventory = [];
-    let vapeStock = [];
-    let udhaarList = [];
-    let bankHistory = [];
-    let expenseList = [];
-    let passwords = { admin: '1234', user: '0000' };
-
-    // Realtime Cloud Sync Loaders on Startup
-    window.onload = function() {
-      // Load Passwords
-      db.ref('posData/passwords').once('value', (snapshot) => {
-        if(snapshot.exists()) passwords = snapshot.val();
-      });
-
-      // Realtime Listeners for Cloud Sync across all devices
-      db.ref('posData/inventory').on('value', (snapshot) => {
+    db.ref('posData/inventory').on('value', (snapshot) => {
         inventory = snapshot.exists() ? snapshot.val() : [
-          { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
-          { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 3 },
-          { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
+            { code: '1001', name: 'Samsung 25W Fast Charger', cost: 900, price: 1200, qty: 15 },
+            { code: '1002', name: 'Type-C Braided Cable', cost: 400, price: 600, qty: 3 },
+            { code: '1003', name: 'AirPods Pro Master Copy', cost: 2200, price: 3000, qty: 8 }
         ];
         renderInventory();
         renderFullInventory();
-      });
+    });
 
-      db.ref('posData/vapeStock').on('value', (snapshot) => {
+    db.ref('posData/vapeStock').on('value', (snapshot) => {
         vapeStock = snapshot.exists() ? snapshot.val() : [
-          { id: '1', name: 'Vgod Cubano', bottleSize: 30, totalMl: 45 },
-          { id: '2', name: 'BLVK Mango Ice', bottleSize: 30, totalMl: 60 },
-          { id: '3', name: 'Nasty Juice Slow Blow', bottleSize: 60, totalMl: 90 }
+            { id: '1', name: 'Vgod Cubano', cost: 1200, bottleSize: 30, totalMl: 45, purchaseDate: '2026-08-12' },
+            { id: '2', name: 'BLVK Mango Ice', cost: 1200, bottleSize: 30, totalMl: 60, purchaseDate: '2026-08-11' },
+            { id: '3', name: 'Nasty Juice Slow Blow', cost: 1800, bottleSize: 60, totalMl: 90, purchaseDate: '2026-08-10' }
         ];
         renderVapeStock();
-        renderVapeSearchDropdown('');
-      });
+    });
 
-      db.ref('posData/salesHistory').on('value', (snapshot) => {
+    db.ref('posData/accessoriesStock').on('value', (snapshot) => {
+        accessoriesStock = snapshot.exists() ? snapshot.val() : [
+            { id: 'acc1', name: 'Voopoo PnP Coils', cost: 300, price: 500, qty: 50, purchaseDate: '2026-08-12' },
+            { id: 'acc2', name: 'SMOK Novo 4 Pods', cost: 400, price: 650, qty: 20, purchaseDate: '2026-08-10' }
+        ];
+        renderAccessoriesStock();
+    });
+
+    db.ref('posData/salesHistory').on('value', (snapshot) => {
         salesHistory = snapshot.exists() ? snapshot.val() : [];
         renderSalesHistory();
         updateAdminReports();
-      });
+    });
 
-      db.ref('posData/udhaarList').on('value', (snapshot) => {
+    db.ref('posData/udhaarList').on('value', (snapshot) => {
         udhaarList = snapshot.exists() ? snapshot.val() : [];
         renderUdhaar();
         updateAdminReports();
-      });
+    });
 
-      db.ref('posData/bankHistory').on('value', (snapshot) => {
+    db.ref('posData/bankHistory').on('value', (snapshot) => {
         bankHistory = snapshot.exists() ? snapshot.val() : [];
         renderBanking();
-      });
+        updateAdminReports();
+    });
 
-      db.ref('posData/expenseList').on('value', (snapshot) => {
+    db.ref('posData/expenseList').on('value', (snapshot) => {
         expenseList = snapshot.exists() ? snapshot.val() : [];
         renderExpenses();
         updateAdminReports();
-      });
+    });
 
-      document.getElementById('login-overlay').style.display = 'flex';
-      document.getElementById('login-pass').focus();
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('login-pass').focus();
 
-      document.addEventListener('click', function(e) {
+    document.addEventListener('click', function(e) {
         let searchBox = document.getElementById('vape-flavor-search');
         let resultsBox = document.getElementById('vape-search-results');
         if(searchBox && resultsBox && !searchBox.contains(e.target) && !resultsBox.contains(e.target)) {
-          resultsBox.style.display = 'none';
+            resultsBox.style.display = 'none';
         }
-      });
+        let accSearchBox = document.getElementById('vape-acc-search');
+        let accResultsBox = document.getElementById('vape-acc-search-results');
+        if(accSearchBox && accResultsBox && !accSearchBox.contains(e.target) && !accResultsBox.contains(e.target)) {
+            accResultsBox.style.display = 'none';
+        }
+    });
 
-      // Global Shortcut Key: F2 to focus barcode search
-      document.addEventListener('keydown', function(e) {
+    document.addEventListener('keydown', function(e) {
         if (e.key === 'F2') {
-          e.preventDefault();
-          let searchInput = document.getElementById('search-input');
-          let billingTab = document.getElementById('billing');
-          if (billingTab && billingTab.classList.contains('active') && searchInput) {
-            searchInput.focus();
-            searchInput.select();
-          }
+            e.preventDefault();
+            let searchInput = document.getElementById('search-input');
+            let billingTab = document.getElementById('billing');
+            if (billingTab && billingTab.classList.contains('active') && searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
         }
-      });
-    };
+    });
+};
 
-    function handleLoginEnter(event) {
-      if(event.key === 'Enter') {
+function updateBusinessDate(newDate) {
+    if(!newDate) return;
+    currentBusinessDate = newDate;
+    renderSalesHistory();
+    renderExpenses();
+    updateAdminReports();
+}
+
+function handleLoginEnter(event) {
+    if(event.key === 'Enter') {
         validateLogin();
-      }
     }
+}
 
-    function validateLogin() {
-      let role = document.getElementById('login-role').value;
-      let pass = document.getElementById('login-pass').value.trim();
+function validateLogin() {
+    let role = document.getElementById('login-role').value;
+    let pass = document.getElementById('login-pass').value.trim();
 
-      if(pass === passwords[role]) {
+    if(pass === passwords[role]) {
         currentRole = role;
         document.getElementById('login-overlay').style.display = 'none';
         document.getElementById('display-user').innerText = role === 'admin' ? '👤 User: Admin' : '👤 User: Hamza';
         
         if(role !== 'admin') {
-          document.getElementById('menu-admin-tab').style.display = 'none';
+            document.getElementById('menu-admin-tab').style.display = 'none';
         } else {
-          document.getElementById('menu-admin-tab').style.display = 'block';
+            document.getElementById('menu-admin-tab').style.display = 'block';
         }
 
         setTimeout(() => {
-          let searchInput = document.getElementById('search-input');
-          if(searchInput) searchInput.focus();
+            let searchInput = document.getElementById('search-input');
+            if(searchInput) searchInput.focus();
         }, 100);
-
-      } else {
+    } else {
         alert('Ghalat password! Baraye meharbani theek password enter karein.');
         document.getElementById('login-pass').value = '';
         document.getElementById('login-pass').focus();
-      }
     }
+}
 
-    function logoutSystem() {
-      currentRole = null;
-      document.getElementById('display-user').innerText = '👤 User: Not Logged In';
-      document.getElementById('login-pass').value = '';
-      document.getElementById('login-overlay').style.display = 'flex';
-      document.getElementById('login-pass').focus();
-    }
+function logoutSystem() {
+    currentRole = null;
+    document.getElementById('display-user').innerText = '👤 User: Not Logged In';
+    document.getElementById('login-pass').value = '';
+    document.getElementById('login-overlay').style.display = 'flex';
+    document.getElementById('login-pass').focus();
+}
 
-    function changePasswordPrompt() {
-      let targetRole = prompt('Kiska password change karna hai? Type karein: "admin" ya "user"');
-      if(!targetRole) return;
-      targetRole = targetRole.toLowerCase().trim();
-
-      if(targetRole !== 'admin' && targetRole !== 'user') {
+function changePasswordPrompt() {
+    let targetRole = prompt('Kiska password change karna hai? Type karein: "admin" ya "user"');
+    if(!targetRole) return;
+    targetRole = targetRole.toLowerCase().trim();
+    if(targetRole !== 'admin' && targetRole !== 'user') {
         alert('Ghalat role enter kiya!');
         return;
-      }
-
-      let oldPass = prompt('Purana password enter karein:');
-      if(oldPass !== passwords[targetRole]) {
+    }
+    let oldPass = prompt('Purana password enter karein:');
+    if(oldPass !== passwords[targetRole]) {
         alert('Purana password ghalat hai!');
         return;
-      }
-
-      let newPass = prompt('Naya password enter karein:');
-      if(!newPass) return;
-
-      passwords[targetRole] = newPass;
-      db.ref('posData/passwords').set(passwords);
-      alert(targetRole.toUpperCase() + ' password successfully update ho gaya!');
     }
+    let newPass = prompt('Naya password enter karein:');
+    if(!newPass) return;
+    
+    passwords[targetRole] = newPass;
+    db.ref('posData/passwords').set(passwords);
+    alert(targetRole.toUpperCase() + ' password successfully update ho gaya!');
+}
 
-    function switchTab(btn, tabId) {
-      if(!currentRole) {
+function switchTab(btn, tabId) {
+    if(!currentRole) {
         alert('Pehle login karein!');
         logoutSystem();
         return;
-      }
-
-      if(tabId === 'admin' && currentRole !== 'admin') {
+    }
+    if(tabId === 'admin' && currentRole !== 'admin') {
         alert('Access Denied! Sirf Admin hi reports dekh sakta hai.');
         return;
-      }
-
-      document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-      document.querySelectorAll('.nav-menu li').forEach(el => el.classList.remove('active'));
-      
-      document.getElementById(tabId).classList.add('active');
-      btn.parentElement.classList.add('active');
-      document.getElementById('page-title').innerText = btn.innerText.replace(/[^\w\s]/gi, '').trim();
-      updateAdminReports();
-
-      if (tabId === 'billing') {
-        setTimeout(() => {
-          let searchInput = document.getElementById('search-input');
-          if(searchInput) {
-            searchInput.focus();
-            searchInput.select();
-          }
-        }, 50);
-      }
     }
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+    document.querySelectorAll('.nav-menu li').forEach(el => el.classList.remove('active'));
+    
+    document.getElementById(tabId).classList.add('active');
+    btn.parentElement.classList.add('active');
+    document.getElementById('page-title').innerText = btn.innerText.replace(/[^\w\s]/gi, '').trim();
 
-    // --- Inventory & Accessories Functions ---
-    function addNewInventoryItem() {
-      if(!currentRole) { logoutSystem(); return; }
-      let editCodeId = document.getElementById('edit-inv-code-identifier').value.trim();
-      let code = document.getElementById('inv-code').value.trim();
-      let name = document.getElementById('inv-name').value.trim();
-      let cost = parseFloat(document.getElementById('inv-cost').value);
-      let price = parseFloat(document.getElementById('inv-price').value);
-      let qty = parseInt(document.getElementById('inv-qty').value);
+    updateAdminReports();
 
-      if (!code || !name || isNaN(cost) || isNaN(price) || isNaN(qty)) {
+    if (tabId === 'billing') {
+        setTimeout(() => {
+            let searchInput = document.getElementById('search-input');
+            if(searchInput) {
+                searchInput.focus();
+                searchInput.select();
+            }
+        }, 50);
+    }
+}
+
+// --- Inventory & Accessories Functions ---
+function addNewInventoryItem() {
+    if(!currentRole) { logoutSystem(); return; }
+    let editCodeId = document.getElementById('edit-inv-code-identifier').value.trim();
+    let code = document.getElementById('inv-code').value.trim();
+    let name = document.getElementById('inv-name').value.trim();
+    let cost = parseFloat(document.getElementById('inv-cost').value);
+    let price = parseFloat(document.getElementById('inv-price').value);
+    let qty = parseInt(document.getElementById('inv-qty').value);
+
+    if (!code || !name || isNaN(cost) || isNaN(price) || isNaN(qty)) {
         alert('Baraye meharbani saari fields theek se fill karein!');
         return;
-      }
+    }
 
-      if (editCodeId !== '') {
+    if (editCodeId !== '') {
         let index = inventory.findIndex(i => i.code === editCodeId);
         if (index !== -1) {
-          inventory[index] = { code, name, cost, price, qty };
+            inventory[index] = { code, name, cost, price, qty };
         }
         document.getElementById('edit-inv-code-identifier').value = '';
         document.getElementById('inv-form-title').innerText = '➕ Add New Item / Mobile Accessory to Stock';
         document.getElementById('inv-submit-btn').innerText = '+ Save to Stock & Billing';
-      } else {
+    } else {
         let existing = inventory.find(i => i.code === code);
         if (existing) {
-          existing.name = name;
-          existing.cost = cost;
-          existing.price = price;
-          existing.qty += qty;
+            existing.name = name;
+            existing.cost = cost;
+            existing.price = price;
+            existing.qty += qty;
         } else {
-          inventory.push({ code, name, cost, price, qty });
+            inventory.push({ code, name, cost, price, qty });
         }
-      }
-
-      db.ref('posData/inventory').set(inventory);
-
-      document.getElementById('inv-code').value = '';
-      document.getElementById('inv-name').value = '';
-      document.getElementById('inv-cost').value = '';
-      document.getElementById('inv-price').value = '';
-      document.getElementById('inv-qty').value = '';
-
-      alert('Accessory stock successfully updated to Cloud!');
     }
 
-    function editInventoryItem(code) {
-      if(!currentRole) { logoutSystem(); return; }
-      let item = inventory.find(i => i.code === code);
-      if(!item) return;
+    db.ref('posData/inventory').set(inventory);
+    document.getElementById('inv-code').value = '';
+    document.getElementById('inv-name').value = '';
+    document.getElementById('inv-cost').value = '';
+    document.getElementById('inv-price').value = '';
+    document.getElementById('inv-qty').value = '';
+    alert('Accessory stock successfully updated to Cloud!');
+}
 
-      document.getElementById('edit-inv-code-identifier').value = item.code;
-      document.getElementById('inv-code').value = item.code;
-      document.getElementById('inv-name').value = item.name;
-      document.getElementById('inv-cost').value = item.cost;
-      document.getElementById('inv-price').value = item.price;
-      document.getElementById('inv-qty').value = item.qty;
+function editInventoryItem(code) {
+    if(!currentRole) { logoutSystem(); return; }
+    let item = inventory.find(i => i.code === code);
+    if(!item) return;
 
-      document.getElementById('inv-form-title').innerText = '✏️ Edit Accessory Item: ' + item.name;
-      document.getElementById('inv-submit-btn').innerText = '💾 Update Accessory';
-      
-      switchTab(document.querySelectorAll('.nav-menu li button')[1], 'stock-mgr');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    document.getElementById('edit-inv-code-identifier').value = item.code;
+    document.getElementById('inv-code').value = item.code;
+    document.getElementById('inv-name').value = item.name;
+    document.getElementById('inv-cost').value = item.cost;
+    document.getElementById('inv-price').value = item.price;
+    document.getElementById('inv-qty').value = item.qty;
 
-    function renderInventory() {
-      let tbody = document.getElementById('inventory-list');
-      if(!tbody) return;
-      tbody.innerHTML = '';
+    document.getElementById('inv-form-title').innerText = '✏️ Edit Item: ' + item.name;
+    document.getElementById('inv-submit-btn').innerText = '💾 Update Item';
+    
+    switchTab(document.querySelectorAll('.nav-menu li button')[1], 'stock-mgr');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
 
-      inventory.forEach(item => {
-        let stockDisplay = item.qty <= 5 
-          ? `<span class="stock-badge-low">⚠️ Low: ${item.qty} Pcs</span>` 
-          : `<span class="stock-badge">${item.qty} Pcs</span>`;
-
+function renderInventory() {
+    let tbody = document.getElementById('inventory-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    inventory.forEach(item => {
+        let stockDisplay = item.qty <= 5 ? `<span class="stock-badge-low">⚠️ Low: ${item.qty} Pcs</span>` : `<span class="stock-badge">${item.qty} Pcs</span>`;
         tbody.innerHTML += `
-          <tr data-code="${item.code}" data-name="${item.name.toLowerCase()}" data-price="${item.price}" data-category="mobile">
-            <td>${item.code}</td>
-            <td><strong>${item.name}</strong></td>
-            <td>${stockDisplay}</td>
-            <td>Rs. ${item.price}</td>
-            <td><button class="btn-add-item" onclick="addToCart('${item.code}', '${item.name}', ${item.price}, 'mobile')">+ Add</button></td>
-          </tr>
+            <tr data-code="${item.code}" data-name="${item.name.toLowerCase()}" data-price="${item.price}" data-cost="${item.cost}" data-category="mobile">
+                <td>${item.code}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>${stockDisplay}</td>
+                <td>Rs. ${item.price}</td>
+                <td><button class="btn-add-item" onclick="addToCart('${item.code}', '${item.name}', ${item.price}, 'mobile', 0, ${item.cost})">+ Add</button></td>
+            </tr>
         `;
-      });
-    }
+    });
+}
 
-    function renderFullInventory() {
-      let tbody = document.getElementById('full-inventory-list');
-      if(!tbody) return;
-      tbody.innerHTML = '';
-
-      inventory.forEach(item => {
-        let stockDisplay = item.qty <= 5 
-          ? `<span class="stock-badge-low">⚠️ Low Stock: ${item.qty} Pcs</span>` 
-          : `<span class="stock-badge">${item.qty} Pcs</span>`;
-
+function renderFullInventory() {
+    let tbody = document.getElementById('full-inventory-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    inventory.forEach(item => {
+        let stockDisplay = item.qty <= 5 ? `<span class="stock-badge-low">⚠️ Low Stock: ${item.qty} Pcs</span>` : `<span class="stock-badge">${item.qty} Pcs</span>`;
         tbody.innerHTML += `
-          <tr>
-            <td>${item.code}</td>
-            <td><strong>${item.name}</strong></td>
-            <td>Rs. ${item.cost}</td>
-            <td>Rs. ${item.price}</td>
-            <td>${stockDisplay}</td>
-            <td>
-              <button class="btn-edit" onclick="editInventoryItem('${item.code}')">Edit</button>
-              <button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button>
-            </td>
-          </tr>
+            <tr>
+                <td>${item.code}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>Rs. ${item.cost}</td>
+                <td>Rs. ${item.price}</td>
+                <td>${stockDisplay}</td>
+                <td>
+                    <button class="btn-edit" onclick="editInventoryItem('${item.code}')">Edit</button>
+                    <button class="btn-remove" onclick="deleteInventoryItem('${item.code}')">Delete</button>
+                </td>
+            </tr>
         `;
-      });
-    }
+    });
+}
 
-    function deleteInventoryItem(code) {
-      if(!currentRole) { logoutSystem(); return; }
-      if(confirm('Kya aap is item ko stock se delete karna chahte hain?')) {
+function deleteInventoryItem(code) {
+    if(!currentRole) { logoutSystem(); return; }
+    if(confirm('Kya aap is item ko stock se delete karna chahte hain?')) {
         inventory = inventory.filter(i => i.code !== code);
         db.ref('posData/inventory').set(inventory);
-      }
+    }
+}
+
+// --- Accessories Stock Management Functions ---
+function addAccessoryStock() {
+    if(!currentRole) { logoutSystem(); return; }
+    let editId = document.getElementById('edit-acc-id-identifier').value.trim();
+    let name = document.getElementById('acc-item-name').value.trim();
+    let cost = parseFloat(document.getElementById('acc-cost').value);
+    let price = parseFloat(document.getElementById('acc-price').value);
+    let qty = parseInt(document.getElementById('acc-qty').value);
+    let purchaseDate = document.getElementById('acc-purchase-date').value || currentBusinessDate;
+
+    if (!name || isNaN(cost) || isNaN(price) || isNaN(qty)) {
+        alert('Baraye meharbani accessory name, cost, price aur quantity theek se enter karein!');
+        return;
     }
 
-    function filterProducts(event) {
-      let inputVal = document.getElementById('search-input').value.toLowerCase().trim();
-      let rows = document.querySelectorAll('#inventory-list tr');
-      let visibleRows = [];
+    if (editId !== '') {
+        let item = accessoriesStock.find(i => i.id === editId);
+        if (item) {
+            item.name = name;
+            item.cost = cost;
+            item.price = price;
+            item.qty = qty;
+            item.purchaseDate = purchaseDate;
+        }
+        document.getElementById('edit-acc-id-identifier').value = '';
+        document.getElementById('acc-form-title').innerText = '➕ Add / Update Hardware & Accessories Stock';
+        document.getElementById('acc-submit-btn').innerText = 'Save Accessory Stock';
+    } else {
+        accessoriesStock.push({
+            id: 'acc-' + Date.now(),
+            name: name,
+            cost: cost,
+            price: price,
+            qty: qty,
+            purchaseDate: purchaseDate
+        });
+    }
 
-      rows.forEach(row => {
+    db.ref('posData/accessoriesStock').set(accessoriesStock);
+    document.getElementById('acc-item-name').value = '';
+    document.getElementById('acc-cost').value = '';
+    document.getElementById('acc-price').value = '';
+    document.getElementById('acc-qty').value = '';
+    document.getElementById('acc-purchase-date').value = '';
+    alert('Accessory stock successfully updated!');
+}
+
+function renderAccessoriesStock() {
+    let tbody = document.getElementById('accessories-stock-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    accessoriesStock.forEach(item => {
+        tbody.innerHTML += `
+            <tr>
+                <td><strong>${item.name}</strong></td>
+                <td>Rs. ${item.cost}</td>
+                <td>Rs. ${item.price}</td>
+                <td><span class="stock-badge">${item.qty} Pcs</span></td>
+                <td>${item.purchaseDate}</td>
+                <td>
+                    <button class="btn-edit" onclick="editAccessoryStock('${item.id}')">Edit</button>
+                    <button class="btn-remove" onclick="deleteAccessoryStock('${item.id}')">Delete</button>
+                </td>
+            </tr>
+        `;
+    });
+}
+
+function editAccessoryStock(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    let item = accessoriesStock.find(i => i.id === id);
+    if(!item) return;
+
+    document.getElementById('edit-acc-id-identifier').value = item.id;
+    document.getElementById('acc-item-name').value = item.name;
+    document.getElementById('acc-cost').value = item.cost;
+    document.getElementById('acc-price').value = item.price;
+    document.getElementById('acc-qty').value = item.qty;
+    document.getElementById('acc-purchase-date').value = item.purchaseDate;
+
+    document.getElementById('acc-form-title').innerText = '✏️ Edit Accessory: ' + item.name;
+    document.getElementById('acc-submit-btn').innerText = '💾 Update Accessory';
+    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+}
+
+function deleteAccessoryStock(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    if(confirm('Kya aap is accessory ko delete karna chahte hain?')) {
+        accessoriesStock = accessoriesStock.filter(i => i.id !== id);
+        db.ref('posData/accessoriesStock').set(accessoriesStock);
+    }
+}
+
+function filterProducts(event) {
+    let inputVal = document.getElementById('search-input').value.toLowerCase().trim();
+    let rows = document.querySelectorAll('#inventory-list tr');
+    let visibleRows = [];
+
+    rows.forEach(row => {
         let text = row.innerText.toLowerCase();
         if (text.includes(inputVal)) {
-          row.style.display = '';
-          visibleRows.push(row);
+            row.style.display = '';
+            visibleRows.push(row);
         } else {
-          row.style.display = 'none';
+            row.style.display = 'none';
         }
-      });
+    });
 
-      if (event.key === 'Enter' && inputVal !== '') {
+    if (event.key === 'Enter' && inputVal !== '') {
         if (visibleRows.length > 0) {
-          let topRow = visibleRows[0];
-          let code = topRow.getAttribute('data-code');
-          let name = topRow.getAttribute('data-name');
-          let price = parseFloat(topRow.getAttribute('data-price'));
-          let category = topRow.getAttribute('data-category') || 'mobile';
+            let topRow = visibleRows[0];
+            let code = topRow.getAttribute('data-code');
+            let name = topRow.getAttribute('data-name');
+            let price = parseFloat(topRow.getAttribute('data-price'));
+            let cost = parseFloat(topRow.getAttribute('data-cost')) || 0;
+            let category = topRow.getAttribute('data-category') || 'mobile';
 
-          addToCart(code, name, price, category);
-          document.getElementById('search-input').value = '';
-          filterProducts({ key: '' });
+            addToCart(code, name, price, category, 0, cost);
+            document.getElementById('search-input').value = '';
+            filterProducts({ key: '' });
         }
-      }
     }
+}
 
-    // --- Cart & Billing Functions ---
-    function addToCart(code, name, originalPrice, category = 'mobile', mlUsed = 0) {
-      if(!currentRole) { logoutSystem(); return; }
+// --- Cart & Billing Functions ---
+function addToCart(code, name, originalPrice, category = 'mobile', mlUsed = 0, costPrice = 0) {
+    if(!currentRole) { logoutSystem(); return; }
 
-      if(category === 'vape') {
+    if(category === 'vape') {
+        let matchedStock = vapeStock.find(s => name.toLowerCase().includes(s.name.toLowerCase()));
+        let costPerMl = matchedStock && matchedStock.totalMl > 0 ? (matchedStock.cost / matchedStock.totalMl) : (1750 / 30);
+
         let existingVapeItem = vapeCart.find(item => item.code === code);
         let addedMl = Number((mlUsed > 0 ? mlUsed : 1).toFixed(1));
+        
+        let availableStock = matchedStock ? matchedStock.totalMl : 999;
+        let currentCartMl = existingVapeItem ? existingVapeItem.mlUsed : 0;
+        if ((currentCartMl + addedMl) > availableStock) {
+            alert(`Stock limit exceeded! Available stock: ${availableStock.toFixed(1)} ml`);
+            return;
+        }
+
         if (existingVapeItem) {
-          existingVapeItem.mlUsed = Number((existingVapeItem.mlUsed + addedMl).toFixed(1));
-          existingVapeItem.salePrice = Number((existingVapeItem.mlUsed * 100).toFixed(1));
+            existingVapeItem.mlUsed = Number((existingVapeItem.mlUsed + addedMl).toFixed(1));
+            existingVapeItem.salePrice = Number((existingVapeItem.mlUsed * 100).toFixed(1));
+            existingVapeItem.costPrice = existingVapeItem.mlUsed * costPerMl;
         } else {
-          vapeCart.push({ 
-            code: code, 
-            name: name, 
-            salePrice: Number((addedMl * 100).toFixed(1)), 
-            qty: 1, 
-            category: category,
-            mlUsed: addedMl
-          });
+            vapeCart.push({
+                code: code,
+                name: name,
+                salePrice: Number((addedMl * 100).toFixed(1)),
+                qty: 1,
+                category: category,
+                mlUsed: addedMl,
+                costPrice: addedMl * costPerMl
+            });
         }
         updateVapeCartUI();
         return;
-      }
-
-      let stockItem = inventory.find(i => i.code === code);
-      if(stockItem && stockItem.qty <= 0) {
-        alert('Yeh item stock mein khatam ho chuki hai!');
-        return;
-      }
-
-      let existingItem = cart.find(item => item.code === code);
-      if (existingItem) {
-        existingItem.qty++;
-      } else {
-        cart.push({ 
-          code: code, 
-          name: name, 
-          salePrice: originalPrice, 
-          qty: 1,
-          category: category,
-          mlUsed: mlUsed
-        });
-      }
-      switchTab(document.querySelectorAll('.nav-menu li button')[0], 'billing');
-      updateCartUI();
     }
 
-    function updateItemPrice(code, newPrice) {
-      let item = cart.find(i => i.code === code);
-      if (item) {
+    let stockItem = inventory.find(i => i.code === code);
+    let currentQtyInCart = 0;
+    let existingItem = cart.find(item => item.code === code);
+    if (existingItem) currentQtyInCart = existingItem.qty;
+
+    if(stockItem && (currentQtyInCart + 1) > stockItem.qty) {
+        alert(`Stock limit exceeded! Available stock: ${stockItem.qty} Pcs`);
+        return;
+    }
+
+    let finalCost = stockItem ? stockItem.cost : (costPrice > 0 ? costPrice : 0);
+    let isKit = name.toLowerCase().includes('kit') || name.toLowerCase().includes('vape');
+    let itemCategory = isKit ? 'Vape Kits' : 'Accessories';
+    
+    if (existingItem) {
+        existingItem.qty++;
+        existingItem.costPrice = finalCost * existingItem.qty;
+    } else {
+        cart.push({
+            code: code,
+            name: name,
+            salePrice: originalPrice,
+            qty: 1,
+            category: itemCategory,
+            mlUsed: 0,
+            costPrice: finalCost
+        });
+    }
+
+    switchTab(document.querySelectorAll('.nav-menu li button')[0], 'billing');
+    updateCartUI();
+}
+
+function updateItemPrice(code, newPrice) {
+    let item = cart.find(i => i.code === code);
+    if (item) {
         item.salePrice = parseFloat(newPrice) || 0;
         updateCartUI();
-      }
     }
+}
 
-    function updateItemQty(code, newQty) {
-      let item = cart.find(i => i.code === code);
-      if (item) {
-        item.qty = parseFloat(newQty) || 1;
+function updateItemQty(code, newQty) {
+    let item = cart.find(i => i.code === code);
+    if (item) {
+        let parsedQty = parseFloat(newQty) || 1;
+        let stockItem = inventory.find(i => i.code === code);
+        if (stockItem && parsedQty > stockItem.qty) {
+            alert(`Stock limit exceeded! Available: ${stockItem.qty} Pcs`);
+            item.qty = stockItem.qty;
+        } else {
+            item.qty = parsedQty;
+        }
+        if (stockItem) {
+            item.costPrice = stockItem.cost * item.qty;
+        }
         updateCartUI();
-      }
+    }
+}
+
+function removeFromCart(code) {
+    cart = cart.filter(item => item.code !== code);
+    updateCartUI();
+}
+
+function updateCartUI() {
+    let cartBody = document.getElementById('cart-list');
+    if(!cartBody) return;
+    cartBody.innerHTML = '';
+    let subtotal = 0;
+
+    let categories = {};
+    cart.forEach(item => {
+        let cat = item.category || 'Accessories';
+        if (!categories[cat]) categories[cat] = [];
+        categories[cat].push(item);
+    });
+
+    for (let catName in categories) {
+        cartBody.innerHTML += `<tr style="background:#edf2f7;"><td colspan="5" style="font-weight:bold; color:#1a253f;">📂 Category: ${catName}</td></tr>`;
+        
+        categories[catName].forEach(item => {
+            let itemTotal = item.salePrice * item.qty;
+            subtotal += itemTotal;
+            
+            cartBody.innerHTML += `
+                <tr>
+                    <td style="padding-left:15px;">↳ ${item.name}</td>
+                    <td>
+                        <input type="number" class="cart-price-input" value="${item.salePrice}" onchange="updateItemPrice('${item.code}', this.value)" oninput="updateItemPrice('${item.code}', this.value)">
+                    </td>
+                    <td>
+                        <input type="number" class="cart-qty-input" value="${item.category === 'E-Liquids' ? item.mlUsed : item.qty}" min="0.1" step="0.1" onchange="${item.category === 'E-Liquids' ? `updateVapeItemMl('${item.code}', this.value)` : `updateItemQty('${item.code}', this.value)`}" oninput="${item.category === 'E-Liquids' ? `updateVapeItemMl('${item.code}', this.value)` : `updateItemQty('${item.code}', this.value)`}"> ${item.category === 'E-Liquids' ? 'ml' : 'Pcs'}
+                    </td>
+                    <td>Rs. ${itemTotal.toFixed(1)}</td>
+                    <td><button class="btn-remove" onclick="removeFromCart('${item.code}')">X</button></td>
+                </tr>
+            `;
+        });
     }
 
-    function removeFromCart(code) {
-      cart = cart.filter(item => item.code !== code);
-      updateCartUI();
-    }
+    let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
+    let grandTotal = subtotal - extraDiscount;
+    if (grandTotal < 0) grandTotal = 0;
 
-    function updateCartUI() {
-      let cartBody = document.getElementById('cart-list');
-      if(!cartBody) return;
-      cartBody.innerHTML = '';
-      let subtotal = 0;
+    document.getElementById('subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
+    document.getElementById('grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
+}
 
-      cart.forEach(item => {
-        let itemTotal = item.salePrice * item.qty;
-        subtotal += itemTotal;
-
-        cartBody.innerHTML += `
-          <tr>
-            <td>${item.name}</td>
-            <td>
-              <input type="number" class="cart-price-input" value="${item.salePrice}" 
-                     onchange="updateItemPrice('${item.code}', this.value)">
-            </td>
-            <td>
-              <input type="number" class="cart-qty-input" value="${item.qty}" min="0.1" step="0.1"
-                     onchange="updateItemQty('${item.code}', this.value)">
-            </td>
-            <td>Rs. ${itemTotal.toFixed(1)}</td>
-            <td><button class="btn-remove" onclick="removeFromCart('${item.code}')">X</button></td>
-          </tr>
-        `;
-      });
-
-      let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
-      let grandTotal = subtotal - extraDiscount;
-      if (grandTotal < 0) grandTotal = 0;
-
-      document.getElementById('subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
-      document.getElementById('grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
-    }
-
-    function saveBill() {
-      if(!currentRole) { logoutSystem(); return; }
-      if (cart.length === 0) {
+function saveBill() {
+    if(!currentRole) { logoutSystem(); return; }
+    if (cart.length === 0) {
         alert('Cart khali hai! Pehle items add karein.');
         return;
-      }
+    }
 
-      let customerName = document.getElementById('bill-customer-name').value.trim() || 'Walk-in Customer';
-      let customerPhone = document.getElementById('bill-customer-phone').value.trim() || '';
+    let customerName = document.getElementById('bill-customer-name').value.trim() || 'Walk-in Customer';
+    let customerPhone = document.getElementById('bill-customer-phone').value.trim() || '';
 
-      cart.forEach(item => {
-        if(item.category === 'mobile') {
-          let stockItem = inventory.find(i => i.code === item.code);
-          if(stockItem) {
+    let detailedCart = cart.map(item => {
+        let stockItem = inventory.find(i => i.code === item.code);
+        let unitCost = stockItem ? stockItem.cost : (item.costPrice / (item.qty || 1) || 0);
+        return { ...item, costPrice: unitCost * item.qty };
+    });
+
+    detailedCart.forEach(item => {
+        let stockItem = inventory.find(i => i.code === item.code);
+        if(stockItem) {
             stockItem.qty = Math.max(0, stockItem.qty - item.qty);
-          }
         }
-      });
+    });
 
-      db.ref('posData/inventory').set(inventory);
+    db.ref('posData/inventory').set(inventory);
 
-      let subtotal = cart.reduce((sum, i) => sum + (i.salePrice * i.qty), 0);
-      let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
-      let grandTotal = subtotal - extraDiscount;
-      if (grandTotal < 0) grandTotal = 0;
+    let subtotal = detailedCart.reduce((sum, i) => sum + (i.salePrice * i.qty), 0);
+    let extraDiscount = parseFloat(document.getElementById('flat-discount').value) || 0;
+    let grandTotal = subtotal - extraDiscount;
+    if (grandTotal < 0) grandTotal = 0;
 
-      let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let itemsSummary = cart.map(i => `${i.name} (x${i.qty})`).join(', ');
+    let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let itemsSummary = detailedCart.map(i => `${i.name} (${i.category === 'E-Liquids' ? i.mlUsed+'ml' : 'x'+i.qty})`).join(', ');
 
-      salesHistory.unshift({
+    salesHistory.unshift({
+        date: currentBusinessDate,
         time: currentTime,
         customerName: customerName,
         customerPhone: customerPhone,
         items: itemsSummary,
         amount: grandTotal,
         category: 'mobile',
-        cartDetails: cart
-      });
+        cartDetails: detailedCart
+    });
 
-      db.ref('posData/salesHistory').set(salesHistory);
+    db.ref('posData/salesHistory').set(salesHistory);
 
-      alert('Bill Saved & Synced to Cloud Successfully!\nCustomer: ' + customerName + '\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
-      
-      cart = [];
-      document.getElementById('bill-customer-name').value = '';
-      document.getElementById('bill-customer-phone').value = '';
-      document.getElementById('flat-discount').value = 0;
-      updateCartUI();
+    alert('Bill Saved & Synced to Cloud Successfully!\nCustomer: ' + customerName + '\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
+    cart = [];
+    document.getElementById('bill-customer-name').value = '';
+    document.getElementById('bill-customer-phone').value = '';
+    document.getElementById('flat-discount').value = 0;
+    updateCartUI();
 
-      let searchInput = document.getElementById('search-input');
-      if (searchInput) {
+    let searchInput = document.getElementById('search-input');
+    if (searchInput) {
         searchInput.focus();
         searchInput.select();
-      }
     }
+}
 
-    // --- Vape & Refill Functions ---
-    function updateVapeItemMl(code, newMl) {
-      let item = vapeCart.find(i => i.code === code);
-      if (item) {
+// --- Vape & Refill Functions ---
+function updateVapeItemMl(code, newMl) {
+    let item = cart.find(i => i.code === code);
+    if (item && item.category === 'E-Liquids') {
         let val = Number((parseFloat(newMl) || 1).toFixed(1));
+        let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
+        let costPerMl = matchedStock && matchedStock.totalMl > 0 ? (matchedStock.cost / matchedStock.totalMl) : (1750 / 30);
+
         item.mlUsed = val;
+        item.qty = val;
         item.salePrice = Number((val * 100).toFixed(1));
+        item.costPrice = val * costPerMl;
+        updateCartUI();
+        return;
+    }
+
+    let vapeItem = vapeCart.find(i => i.code === code);
+    if (vapeItem) {
+        let val = Number((parseFloat(newMl) || 1).toFixed(1));
+        if (vapeItem.category === 'Hardware / Accessory') {
+            let matchedAcc = accessoriesStock.find(a => a.id === vapeItem.accId);
+            if (matchedAcc && val > matchedAcc.qty) {
+                alert(`Stock limit exceeded! Available: ${matchedAcc.qty} Pcs`);
+                vapeItem.qty = matchedAcc.qty;
+            } else {
+                vapeItem.qty = val;
+            }
+        } else {
+            let matchedStock = vapeStock.find(s => vapeItem.name.toLowerCase().includes(s.name.toLowerCase()));
+            if (matchedStock && val > matchedStock.totalMl) {
+                alert(`Stock limit exceeded! Available: ${matchedStock.totalMl.toFixed(1)} ml`);
+                vapeItem.mlUsed = matchedStock.totalMl;
+            } else {
+                vapeItem.mlUsed = val;
+            }
+            let costPerMl = matchedStock && matchedStock.totalMl > 0 ? (matchedStock.cost / matchedStock.totalMl) : (1750 / 30);
+            vapeItem.salePrice = Number((vapeItem.mlUsed * 100).toFixed(1));
+            vapeItem.costPrice = vapeItem.mlUsed * costPerMl;
+        }
         updateVapeCartUI();
-      }
     }
+}
 
-    function removeFromVapeCart(code) {
-      vapeCart = vapeCart.filter(item => item.code !== code);
-      updateVapeCartUI();
+function updateVapeAccessoryPrice(code, newPrice) {
+    let vapeItem = vapeCart.find(i => i.code === code && i.category === 'Hardware / Accessory');
+    if (vapeItem) {
+        vapeItem.unitPrice = parseFloat(newPrice) || 0;
+        updateVapeCartUI();
     }
+}
 
-    function updateVapeCartUI() {
-      let cartBody = document.getElementById('vape-cart-list');
-      if(!cartBody) return;
-      cartBody.innerHTML = '';
-      let subtotal = 0;
+function removeFromVapeCart(code) {
+    vapeCart = vapeCart.filter(item => item.code !== code);
+    updateVapeCartUI();
+}
 
-      vapeCart.forEach(item => {
-        let itemTotal = item.salePrice; 
+function updateVapeCartUI() {
+    let cartBody = document.getElementById('vape-cart-list');
+    if(!cartBody) return;
+    cartBody.innerHTML = '';
+    let subtotal = 0;
+
+    vapeCart.forEach(item => {
+        let itemTotal = item.category === 'Hardware / Accessory' ? (item.unitPrice * item.qty) : item.salePrice;
         subtotal += itemTotal;
+        
+        let priceFieldHtml = item.category === 'Hardware / Accessory' 
+            ? `<input type="number" class="cart-price-input" value="${item.unitPrice}" onchange="updateVapeAccessoryPrice('${item.code}', this.value)" oninput="updateVapeAccessoryPrice('${item.code}', this.value)">`
+            : `Rs. ${item.salePrice / item.mlUsed} (Fixed)`;
 
         cartBody.innerHTML += `
-          <tr>
-            <td>${item.name}</td>
-            <td>Rs. 100</td>
-            <td>
-              <input type="number" class="cart-qty-input" value="${item.mlUsed}" min="0.1" step="0.1"
-                     onchange="updateVapeItemMl('${item.code}', this.value)"> ml
-            </td>
-            <td>Rs. ${itemTotal.toFixed(1)}</td>
-            <td><button class="btn-remove" onclick="removeFromVapeCart('${item.code}')">X</button></td>
-          </tr>
+            <tr>
+                <td>${item.name}</td>
+                <td>${priceFieldHtml}</td>
+                <td>
+                    <input type="number" class="cart-qty-input" value="${item.category === 'Hardware / Accessory' ? item.qty : item.mlUsed}" min="0.1" step="0.1" onchange="updateVapeItemMl('${item.code}', this.value)" oninput="updateVapeItemMl('${item.code}', this.value)"> ${item.category === 'Hardware / Accessory' ? 'Pcs' : 'ml'}
+                </td>
+                <td>Rs. ${itemTotal.toFixed(1)}</td>
+                <td><button class="btn-remove" onclick="removeFromVapeCart('${item.code}')">X</button></td>
+            </tr>
         `;
-      });
+    });
 
-      let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
-      let grandTotal = subtotal - extraDiscount;
-      if (grandTotal < 0) grandTotal = 0;
+    let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
+    let grandTotal = subtotal - extraDiscount;
+    if (grandTotal < 0) grandTotal = 0;
 
-      document.getElementById('vape-subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
-      document.getElementById('vape-grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
+    document.getElementById('vape-subtotal').innerText = 'Rs. ' + subtotal.toFixed(1);
+    document.getElementById('vape-grand-total').innerText = 'Rs. ' + grandTotal.toFixed(1);
+}
+
+function saveVapeBill() {
+    if(!currentRole) { logoutSystem(); return; }
+    if (vapeCart.length === 0) {
+        alert('Vape Cart khali hai! Pehle items ya refills add karein.');
+        return;
     }
 
-    function saveVapeBill() {
-      if(!currentRole) { logoutSystem(); return; }
-      if (vapeCart.length === 0) {
-        alert('Vape Cart khali hai! Pehle flavors add karein.');
-        return;
-      }
-
-      vapeCart.forEach(item => {
-        let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
-        if(matchedStock) {
-          matchedStock.totalMl = Number(Math.max(0, matchedStock.totalMl - item.mlUsed).toFixed(1));
+    vapeCart.forEach(item => {
+        if (item.category === 'Hardware / Accessory') {
+            let matchedAcc = accessoriesStock.find(a => a.id === item.accId);
+            if (matchedAcc) {
+                matchedAcc.qty = Math.max(0, matchedAcc.qty - item.qty);
+            }
+        } else {
+            let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
+            if(matchedStock) {
+                matchedStock.totalMl = Number(Math.max(0, matchedStock.totalMl - item.mlUsed).toFixed(1));
+            }
         }
-      });
+    });
 
-      db.ref('posData/vapeStock').set(vapeStock);
+    db.ref('posData/vapeStock').set(vapeStock);
+    db.ref('posData/accessoriesStock').set(accessoriesStock);
 
-      let subtotal = vapeCart.reduce((sum, i) => sum + i.salePrice, 0);
-      let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
-      let grandTotal = subtotal - extraDiscount;
-      if (grandTotal < 0) grandTotal = 0;
+    let subtotal = vapeCart.reduce((sum, i) => sum + (i.category === 'Hardware / Accessory' ? (i.unitPrice * i.qty) : i.salePrice), 0);
+    let extraDiscount = parseFloat(document.getElementById('vape-flat-discount').value) || 0;
+    let grandTotal = subtotal - extraDiscount;
+    if (grandTotal < 0) grandTotal = 0;
 
-      let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-      let itemsSummary = vapeCart.map(i => `${i.name} (${i.mlUsed}ml)`).join(', ');
+    let detailedVapeCart = vapeCart.map(item => {
+        if (item.category === 'Hardware / Accessory') {
+            let matchedAcc = accessoriesStock.find(a => a.id === item.accId);
+            let costPerUnit = matchedAcc ? matchedAcc.cost : (item.unitCost || 0);
+            return {
+                code: item.code,
+                name: item.name,
+                salePrice: item.unitPrice,
+                qty: item.qty,
+                category: 'Accessories',
+                mlUsed: 0,
+                costPrice: costPerUnit * item.qty
+            };
+        } else {
+            let matchedStock = vapeStock.find(s => item.name.toLowerCase().includes(s.name.toLowerCase()));
+            let costPerMl = matchedStock && matchedStock.totalMl > 0 ? (matchedStock.cost / matchedStock.totalMl) : (1750 / 30);
+            return {
+                ...item,
+                category: 'E-Liquids',
+                costPrice: item.mlUsed * costPerMl
+            };
+        }
+    });
 
-      salesHistory.unshift({
+    let currentTime = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    let itemsSummary = detailedVapeCart.map(i => `${i.name} (${i.category === 'E-Liquids' ? i.mlUsed+'ml' : 'x'+i.qty})`).join(', ');
+
+    salesHistory.unshift({
+        date: currentBusinessDate,
         time: currentTime,
-        customerName: 'Vape Customer',
+        customerName: 'Vape & Hardware Customer',
         customerPhone: '',
         items: itemsSummary,
         amount: grandTotal,
         category: 'vape',
-        cartDetails: vapeCart
-      });
+        cartDetails: detailedVapeCart
+    });
 
-      db.ref('posData/salesHistory').set(salesHistory);
+    db.ref('posData/salesHistory').set(salesHistory);
 
-      alert('Vape Bill Saved & Synced Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
-      
-      vapeCart = [];
-      document.getElementById('vape-flat-discount').value = 0;
-      updateVapeCartUI();
-    }
+    alert('Vape Bill Saved & Synced Successfully!\nSales Recorded: Rs. ' + grandTotal.toFixed(1));
+    vapeCart = [];
+    document.getElementById('vape-flat-discount').value = 0;
+    updateVapeCartUI();
+}
 
-    function filterVapeSearchDropdown() {
-      let query = document.getElementById('vape-flavor-search').value.toLowerCase().trim();
-      selectedDropdownIndex = -1;
-      renderVapeSearchDropdown(query);
-      document.getElementById('vape-search-results').style.display = 'block';
-    }
+// --- Vape & Refill Search Functions ---
+function filterVapeSearchDropdown() {
+    let query = document.getElementById('vape-flavor-search').value.toLowerCase().trim();
+    selectedDropdownIndex = -1;
+    renderVapeSearchDropdown(query);
+    document.getElementById('vape-search-results').style.display = 'block';
+}
 
-    function renderVapeSearchDropdown(query) {
-      let resultsBox = document.getElementById('vape-search-results');
-      if(!resultsBox) return;
-      resultsBox.innerHTML = '';
+function renderVapeSearchDropdown(query) {
+    let resultsBox = document.getElementById('vape-search-results');
+    if(!resultsBox) return;
+    resultsBox.innerHTML = '';
 
-      let filtered = vapeStock.filter(item => item.name.toLowerCase().includes(query));
-
-      if (filtered.length === 0) {
+    let filtered = vapeStock.filter(item => item.name.toLowerCase().includes(query));
+    if (filtered.length === 0) {
         resultsBox.innerHTML = '<div style="padding: 10px; font-size: 13px; color: #a0aec0;">Koi flavor nahi mila</div>';
         return;
-      }
+    }
 
-      filtered.forEach((item, index) => {
+    filtered.forEach((item, index) => {
         let bottles = Math.floor(item.totalMl / item.bottleSize);
         let remMl = Number((item.totalMl % item.bottleSize).toFixed(1));
-        let breakdown = `${bottles} Bottle(s) & ${remMl} ml`;
+        let breakdown = `${bottles} Unit(s) & ${remMl} ml`;
 
         let div = document.createElement('div');
         div.className = 'vape-dropdown-item';
         div.setAttribute('data-index', index);
         div.setAttribute('data-name', item.name);
         div.setAttribute('data-ml', item.totalMl);
-        
         div.innerHTML = `
-          <div style="font-weight: bold; color: #2d3748;">${item.name}</div>
-          <div style="font-size: 11px; color: #718096; margin-top: 2px;">
-            Size: ${item.bottleSize}ml | Available: <span style="color: #276749; font-weight: bold;">${item.totalMl.toFixed(1)} ml</span> (${breakdown})
-          </div>
+            <div style="font-weight: bold; color: #2d3748;">${item.name}</div>
+            <div style="font-size: 11px; color: #718096; margin-top: 2px;">
+                Size: ${item.bottleSize}ml | Cost: Rs. ${item.cost} | Available: <span style="color: #276749; font-weight: bold;">${item.totalMl.toFixed(1)} ml</span> (${breakdown})
+            </div>
         `;
-
-        div.onclick = function() {
-          selectVapeFlavor(item.name, item.totalMl);
+        div.onmousedown = function(e) {
+            e.preventDefault();
+            selectVapeFlavor(item.name, item.totalMl);
         };
-
         resultsBox.appendChild(div);
-      });
-    }
+    });
+}
 
-    function handleVapeSearchKeydown(event) {
-      let resultsBox = document.getElementById('vape-search-results');
-      let items = resultsBox ? resultsBox.querySelectorAll('.vape-dropdown-item') : [];
+function handleVapeSearchKeydown(event) {
+    let resultsBox = document.getElementById('vape-search-results');
+    let items = resultsBox ? resultsBox.querySelectorAll('.vape-dropdown-item') : [];
 
-      if (event.key === 'ArrowDown') {
+    if (event.key === 'ArrowDown') {
         event.preventDefault();
         if (items.length > 0) {
-          selectedDropdownIndex = (selectedDropdownIndex + 1) % items.length;
-          updateDropdownHighlight(items);
+            selectedDropdownIndex = (selectedDropdownIndex + 1) % items.length;
+            updateDropdownHighlight(items);
         }
-      } else if (event.key === 'ArrowUp') {
+    } else if (event.key === 'ArrowUp') {
         event.preventDefault();
         if (items.length > 0) {
-          selectedDropdownIndex = (selectedDropdownIndex - 1 + items.length) % items.length;
-          updateDropdownHighlight(items);
+            selectedDropdownIndex = (selectedDropdownIndex - 1 + items.length) % items.length;
+            updateDropdownHighlight(items);
         }
-      } else if (event.key === 'Enter') {
+    } else if (event.key === 'Enter') {
         event.preventDefault();
         if (selectedDropdownIndex >= 0 && selectedDropdownIndex < items.length) {
-          let selected = items[selectedDropdownIndex];
-          selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
+            let selected = items[selectedDropdownIndex];
+            selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
         } else if (items.length > 0) {
-          let selected = items[0];
-          selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
+            let selected = items[0];
+            selectVapeFlavor(selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-ml')));
         }
-      }
     }
+}
 
-    function updateDropdownHighlight(items) {
-      items.forEach((item, idx) => {
+function updateDropdownHighlight(items) {
+    items.forEach((item, idx) => {
         if (idx === selectedDropdownIndex) {
-          item.classList.add('selected');
-          item.scrollIntoView({ block: 'nearest' });
+            item.classList.add('selected');
+            item.scrollIntoView({ block: 'nearest' });
         } else {
-          item.classList.remove('selected');
+            item.classList.remove('selected');
         }
-      });
-    }
+    });
+}
 
-    function selectVapeFlavor(flavorName, availableMl) {
-      document.getElementById('vape-flavor-search').value = flavorName;
-      document.getElementById('vape-selected-flavor-name').value = flavorName;
-      document.getElementById('vape-search-results').style.display = 'none';
+function selectVapeFlavor(flavorName, availableMl) {
+    document.getElementById('vape-flavor-search').value = flavorName;
+    document.getElementById('vape-selected-flavor-name').value = flavorName;
+    document.getElementById('vape-search-results').style.display = 'none';
+    document.getElementById('vape-selected-display').innerText = `✅ Selected: ${flavorName} (Stock Available: ${availableMl.toFixed(1)} ml)`;
 
-      document.getElementById('vape-selected-display').innerText = `✅ Selected Flavor: ${flavorName} (Stock Available: ${availableMl.toFixed(1)} ml)`;
-      
-      let mlInput = document.getElementById('vape-ml-qty');
-      if(!mlInput.value || parseFloat(mlInput.value) <= 0) {
+    let mlInput = document.getElementById('vape-ml-qty');
+    if(!mlInput.value || parseFloat(mlInput.value) <= 0) {
         mlInput.value = '1';
-      }
-      calculateVapePrice();
-      mlInput.focus();
-      mlInput.select();
     }
+    calculateVapePrice();
+    mlInput.focus();
+    mlInput.select();
+}
 
-    function calculateVapePrice() {
-      let mlQty = parseFloat(document.getElementById('vape-ml-qty').value) || 0;
-      document.getElementById('vape-total-price').value = (mlQty * 100).toFixed(1);
-    }
+function calculateVapePrice() {
+    let mlQty = parseFloat(document.getElementById('vape-ml-qty').value) || 0;
+    document.getElementById('vape-total-price').value = (mlQty * 100).toFixed(1);
+}
 
-    function handleCustomVapeEnter(event) {
-      if (event.key === 'Enter') {
+function handleCustomVapeEnter(event) {
+    if (event.key === 'Enter') {
         event.preventDefault();
         addCustomVapeRefill();
-      }
     }
+}
 
-    function addCustomVapeRefill() {
-      if(!currentRole) { logoutSystem(); return; }
-      let flavorName = document.getElementById('vape-selected-flavor-name').value.trim();
-      if(!flavorName) {
+function addCustomVapeRefill() {
+    if(!currentRole) { logoutSystem(); return; }
+    let flavorName = document.getElementById('vape-selected-flavor-name').value.trim();
+    if(!flavorName) {
         flavorName = document.getElementById('vape-flavor-search').value.trim();
-      }
-      let ml = Number((parseFloat(document.getElementById('vape-ml-qty').value) || 0).toFixed(1));
-      let price = parseFloat(document.getElementById('vape-total-price').value);
+    }
+    let ml = Number((parseFloat(document.getElementById('vape-ml-qty').value) || 0).toFixed(1));
+    let price = parseFloat(document.getElementById('vape-total-price').value);
 
-      if (!flavorName || isNaN(ml) || ml <= 0 || isNaN(price)) {
+    if (!flavorName || isNaN(ml) || ml <= 0 || isNaN(price)) {
         alert('Baraye meharbani list ya search se flavor select karein aur valid ML quantity enter karein!');
         return;
-      }
-
-      let matchedStock = vapeStock.find(s => s.name.toLowerCase() === flavorName.toLowerCase());
-      if(matchedStock && ml > matchedStock.totalMl) {
-        alert(`Warning: Aap sirf ${matchedStock.totalMl.toFixed(1)} ml tak refill kar sakte hain, stock kam hai!`);
-      }
-
-      let itemCode = 'VAPE-RF-' + Date.now().toString().slice(-4);
-      let fullName = `${flavorName} (${ml}ml Refill)`;
-
-      addToCart(itemCode, fullName, price, 'vape', ml);
-
-      document.getElementById('vape-flavor-search').value = '';
-      document.getElementById('vape-selected-flavor-name').value = '';
-      document.getElementById('vape-ml-qty').value = '';
-      document.getElementById('vape-total-price').value = '';
-      document.getElementById('vape-selected-display').innerText = '';
-      document.getElementById('vape-flavor-search').focus();
     }
 
-    function addFlavorToStock() {
-      if(!currentRole) { logoutSystem(); return; }
-      let editId = document.getElementById('edit-vape-id-identifier').value.trim();
-      let name = document.getElementById('new-flavor-name').value.trim();
-      let bottles = parseFloat(document.getElementById('new-flavor-bottles').value);
-      let bottleSize = parseFloat(document.getElementById('new-flavor-mlperbottle').value) || 30;
+    let matchedStock = vapeStock.find(s => s.name.toLowerCase() === flavorName.toLowerCase());
+    let currentVapeCartItem = vapeCart.find(item => item.name.toLowerCase().includes(flavorName.toLowerCase()));
+    let existingCartMl = currentVapeCartItem ? currentVapeCartItem.mlUsed : 0;
 
-      if (!name || isNaN(bottles) || bottles < 0) {
-        alert('Valid Flavor Name aur Bottle Quantity enter karein!');
+    if(matchedStock && (existingCartMl + ml) > matchedStock.totalMl) {
+        alert(`Warning: Aap sirf ${matchedStock.totalMl.toFixed(1)} ml tak refill kar sakte hain, stock kam hai!`);
         return;
-      }
+    }
 
-      let addedMl = Number((bottles * bottleSize).toFixed(1));
+    let itemCode = 'VAPE-RF-' + Date.now().toString().slice(-4);
+    let fullName = `${flavorName} (${ml}ml Refill)`;
 
-      if (editId !== '') {
+    let costPerMl = matchedStock && matchedStock.totalMl > 0 ? (matchedStock.cost / matchedStock.totalMl) : (1750 / 30);
+    
+    let existingItem = vapeCart.find(item => item.name === fullName);
+    if (existingItem) {
+        existingItem.mlUsed += ml;
+        existingItem.salePrice = Number((existingItem.mlUsed * 100).toFixed(1));
+        existingItem.costPrice = existingItem.mlUsed * costPerMl;
+    } else {
+        vapeCart.push({
+            code: itemCode,
+            name: fullName,
+            salePrice: price,
+            qty: 1,
+            category: 'E-Liquids',
+            mlUsed: ml,
+            costPrice: ml * costPerMl
+        });
+    }
+
+    updateVapeCartUI();
+
+    document.getElementById('vape-flavor-search').value = '';
+    document.getElementById('vape-selected-flavor-name').value = '';
+    document.getElementById('vape-ml-qty').value = '';
+    document.getElementById('vape-total-price').value = '';
+    document.getElementById('vape-selected-display').innerText = '';
+    document.getElementById('vape-flavor-search').focus();
+}
+
+// --- Vape Tab Accessories Search & Add Functions ---
+function filterVapeAccDropdown() {
+    let query = document.getElementById('vape-acc-search').value.toLowerCase().trim();
+    selectedAccDropdownIndex = -1;
+    renderVapeAccDropdown(query);
+    document.getElementById('vape-acc-search-results').style.display = 'block';
+}
+
+function renderVapeAccDropdown(query) {
+    let resultsBox = document.getElementById('vape-acc-search-results');
+    if(!resultsBox) return;
+    resultsBox.innerHTML = '';
+
+    let filtered = accessoriesStock.filter(item => item.name.toLowerCase().includes(query));
+    if (filtered.length === 0) {
+        resultsBox.innerHTML = '<div style="padding: 10px; font-size: 13px; color: #a0aec0;">Koi accessory nahi mili</div>';
+        return;
+    }
+
+    filtered.forEach((item, index) => {
+        let div = document.createElement('div');
+        div.className = 'vape-dropdown-item';
+        div.setAttribute('data-index', index);
+        div.setAttribute('data-id', item.id);
+        div.setAttribute('data-name', item.name);
+        div.setAttribute('data-price', item.price);
+        div.setAttribute('data-cost', item.cost);
+        div.innerHTML = `
+            <div style="font-weight: bold; color: #2d3748;">${item.name}</div>
+            <div style="font-size: 11px; color: #718096; margin-top: 2px;">
+                Price: Rs. ${item.price} | Stock: <span style="color: #276749; font-weight: bold;">${item.qty} Pcs</span>
+            </div>
+        `;
+        div.onmousedown = function(e) {
+            e.preventDefault();
+            selectVapeAccessory(item.id, item.name, item.price, item.cost, item.qty);
+        };
+        resultsBox.appendChild(div);
+    });
+}
+
+function handleVapeAccSearchKeydown(event) {
+    let resultsBox = document.getElementById('vape-acc-search-results');
+    let items = resultsBox ? resultsBox.querySelectorAll('.vape-dropdown-item') : [];
+
+    if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        if (items.length > 0) {
+            selectedAccDropdownIndex = (selectedAccDropdownIndex + 1) % items.length;
+            updateAccDropdownHighlight(items);
+        }
+    } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        if (items.length > 0) {
+            selectedAccDropdownIndex = (selectedAccDropdownIndex - 1 + items.length) % items.length;
+            updateAccDropdownHighlight(items);
+        }
+    } else if (event.key === 'Enter') {
+        event.preventDefault();
+        if (selectedAccDropdownIndex >= 0 && selectedAccDropdownIndex < items.length) {
+            let selected = items[selectedAccDropdownIndex];
+            selectVapeAccessory(selected.getAttribute('data-id'), selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-price')), parseFloat(selected.getAttribute('data-cost')), 0);
+        } else if (items.length > 0) {
+            let selected = items[0];
+            selectVapeAccessory(selected.getAttribute('data-id'), selected.getAttribute('data-name'), parseFloat(selected.getAttribute('data-price')), parseFloat(selected.getAttribute('data-cost')), 0);
+        }
+    }
+}
+
+function updateAccDropdownHighlight(items) {
+    items.forEach((item, idx) => {
+        if (idx === selectedAccDropdownIndex) {
+            item.classList.add('selected');
+            item.scrollIntoView({ block: 'nearest' });
+        } else {
+            item.classList.remove('selected');
+        }
+    });
+}
+
+function selectVapeAccessory(id, name, price, cost, qty) {
+    document.getElementById('vape-acc-search').value = name;
+    document.getElementById('vape-selected-acc-id').value = id;
+    document.getElementById('vape-selected-acc-name').value = name;
+    document.getElementById('vape-selected-acc-price').value = price;
+    document.getElementById('vape-selected-acc-cost').value = cost;
+    document.getElementById('vape-acc-search-results').style.display = 'none';
+    document.getElementById('vape-acc-selected-display').innerText = `✅ Selected: ${name} (Stock: ${qty} Pcs)`;
+
+    let qtyInput = document.getElementById('vape-acc-qty');
+    qtyInput.value = '1';
+    qtyInput.focus();
+    qtyInput.select();
+}
+
+function handleCustomAccEnter(event) {
+    if (event.key === 'Enter') {
+        event.preventDefault();
+        addVapeAccessoryToCart();
+    }
+}
+
+function addVapeAccessoryToCart() {
+    if(!currentRole) { logoutSystem(); return; }
+    let accId = document.getElementById('vape-selected-acc-id').value.trim();
+    let accName = document.getElementById('vape-selected-acc-name').value.trim();
+    if(!accName) {
+        accName = document.getElementById('vape-acc-search').value.trim();
+        let matched = accessoriesStock.find(a => a.name.toLowerCase() === accName.toLowerCase());
+        if(matched) {
+            accId = matched.id;
+            accName = matched.name;
+            document.getElementById('vape-selected-acc-price').value = matched.price;
+            document.getElementById('vape-selected-acc-cost').value = matched.cost;
+        }
+    }
+    let unitPrice = parseFloat(document.getElementById('vape-selected-acc-price').value) || 0;
+    let unitCost = parseFloat(document.getElementById('vape-selected-acc-cost').value) || 0;
+    let qty = parseInt(document.getElementById('vape-acc-qty').value) || 1;
+
+    if (!accName || unitPrice <= 0 || isNaN(qty) || qty <= 0) {
+        alert('Baraye meharbani list se valid accessory select karein aur price enter karein!');
+        return;
+    }
+
+    let matchedStock = accessoriesStock.find(a => a.id === accId || a.name.toLowerCase() === accName.toLowerCase());
+    let existingVapeAcc = vapeCart.find(item => item.code === (accId || ('ACC-' + Date.now())) && item.category === 'Hardware / Accessory');
+    let currentCartAccQty = existingVapeAcc ? existingVapeAcc.qty : 0;
+
+    if(matchedStock && (currentCartAccQty + qty) > matchedStock.qty) {
+        alert(`Warning: Stock mein sirf ${matchedStock.qty} Pcs available hain!`);
+        return;
+    }
+
+    let itemCode = accId || ('ACC-' + Date.now());
+    
+    if (existingVapeAcc) {
+        existingVapeAcc.qty += qty;
+        existingVapeAcc.unitPrice = unitPrice;
+    } else {
+        vapeCart.push({
+            code: itemCode,
+            accId: accId,
+            name: accName,
+            unitPrice: unitPrice,
+            unitCost: unitCost,
+            qty: qty,
+            category: 'Hardware / Accessory',
+            mlUsed: 0
+        });
+    }
+
+    updateVapeCartUI();
+
+    document.getElementById('vape-acc-search').value = '';
+    document.getElementById('vape-selected-acc-id').value = '';
+    document.getElementById('vape-selected-acc-name').value = '';
+    document.getElementById('vape-selected-acc-price').value = '';
+    document.getElementById('vape-selected-acc-cost').value = '0';
+    document.getElementById('vape-acc-qty').value = '1';
+    document.getElementById('vape-acc-selected-display').innerText = '';
+    document.getElementById('vape-acc-search').focus();
+}
+
+function addFlavorToStock() {
+    if(!currentRole) { logoutSystem(); return; }
+    let editId = document.getElementById('edit-vape-id-identifier').value.trim();
+    let name = document.getElementById('new-flavor-name').value.trim();
+    let cost = parseFloat(document.getElementById('new-flavor-cost').value);
+    let bottles = parseFloat(document.getElementById('new-flavor-bottles').value);
+    let bottleSize = parseFloat(document.getElementById('new-flavor-mlperbottle').value) || 30;
+    let purchaseDate = document.getElementById('new-flavor-purchase-date').value || currentBusinessDate;
+
+    if (!name || isNaN(cost) || isNaN(bottles) || bottles < 0) {
+        alert('Baraye meharbani Flavor Name, Purchase Cost aur Quantity theek se enter karein!');
+        return;
+    }
+
+    let addedMl = Number((bottles * bottleSize).toFixed(1));
+
+    if (editId !== '') {
         let item = vapeStock.find(i => i.id === editId);
         if (item) {
-          item.name = name;
-          item.bottleSize = bottleSize;
-          item.totalMl = addedMl;
+            item.name = name;
+            item.cost = cost;
+            item.bottleSize = bottleSize;
+            item.totalMl = addedMl;
+            item.purchaseDate = purchaseDate;
         }
         document.getElementById('edit-vape-id-identifier').value = '';
-        document.getElementById('vape-form-title').innerText = '➕ Add / Update Juice Stock';
-        document.getElementById('vape-submit-btn').innerText = 'Save Stock';
-      } else {
+        document.getElementById('vape-form-title').innerText = '➕ Add / Update Juice Stock & Purchase Cost';
+        document.getElementById('vape-submit-btn').innerText = 'Save Juice/Stock';
+    } else {
         let existing = vapeStock.find(item => item.name.toLowerCase() === name.toLowerCase());
         if (existing) {
-          existing.totalMl = Number((existing.totalMl + addedMl).toFixed(1));
+            existing.cost += cost;
+            existing.totalMl = Number((existing.totalMl + addedMl).toFixed(1));
+            existing.purchaseDate = purchaseDate;
         } else {
-          vapeStock.push({
-            id: Date.now().toString(),
-            name: name,
-            bottleSize: bottleSize,
-            totalMl: addedMl
-          });
+            vapeStock.push({
+                id: Date.now().toString(),
+                name: name,
+                cost: cost,
+                bottleSize: bottleSize,
+                totalMl: addedMl,
+                purchaseDate: purchaseDate
+            });
         }
-      }
-
-      db.ref('posData/vapeStock').set(vapeStock);
-
-      document.getElementById('new-flavor-name').value = '';
-      document.getElementById('new-flavor-bottles').value = '';
-      document.getElementById('new-flavor-mlperbottle').value = '';
-      alert('Vape stock successfully updated to Cloud!');
     }
 
-    function editVapeStock(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      let item = vapeStock.find(i => i.id === id);
-      if(!item) return;
+    db.ref('posData/vapeStock').set(vapeStock);
+    document.getElementById('new-flavor-name').value = '';
+    document.getElementById('new-flavor-cost').value = '';
+    document.getElementById('new-flavor-bottles').value = '';
+    document.getElementById('new-flavor-mlperbottle').value = '';
+    document.getElementById('new-flavor-purchase-date').value = '';
+    alert('Vape/Juice stock & purchase cost successfully updated to Cloud!');
+}
 
-      document.getElementById('edit-vape-id-identifier').value = item.id;
-      document.getElementById('new-flavor-name').value = item.name;
-      document.getElementById('new-flavor-bottles').value = (item.totalMl / item.bottleSize).toFixed(1);
-      document.getElementById('new-flavor-mlperbottle').value = item.bottleSize;
+function editVapeStock(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    let item = vapeStock.find(i => i.id === id);
+    if(!item) return;
 
-      document.getElementById('vape-form-title').innerText = '✏️ Edit Flavor Stock: ' + item.name;
-      document.getElementById('vape-submit-btn').innerText = '💾 Update Flavor Stock';
-      
-      switchTab(document.querySelectorAll('.nav-menu li button')[3], 'vape-stocks');
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }
+    document.getElementById('edit-vape-id-identifier').value = item.id;
+    document.getElementById('new-flavor-name').value = item.name;
+    document.getElementById('new-flavor-cost').value = item.cost;
+    document.getElementById('new-flavor-bottles').value = (item.totalMl / item.bottleSize).toFixed(1);
+    document.getElementById('new-flavor-mlperbottle').value = item.bottleSize;
+    document.getElementById('new-flavor-purchase-date').value = item.purchaseDate || currentBusinessDate;
 
-    function renderVapeStock() {
-      let stockBody = document.getElementById('vape-stock-list');
-      if(!stockBody) return;
-      stockBody.innerHTML = '';
+    document.getElementById('vape-form-title').innerText = '✏️ Edit Flavor Stock: ' + item.name;
+    document.getElementById('vape-submit-btn').innerText = '💾 Update Flavor Stock';
 
-      vapeStock.forEach(item => {
-        let bottles = Math.floor(item.totalMl / item.bottleSize);
+    switchTab(document.querySelectorAll('.nav-menu li button')[3], 'vape-stocks');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function renderVapeStock() {
+    let stockBody = document.getElementById('vape-stock-list');
+    if(!stockBody) return;
+    stockBody.innerHTML = '';
+    vapeStock.forEach(item => {
+        let units = Math.floor(item.totalMl / item.bottleSize);
         let remMl = Number((item.totalMl % item.bottleSize).toFixed(1));
-        let breakdownText = `${bottles} Bottle(s) & ${remMl} ml`;
+        let breakdownText = `${units} Unit(s) & ${remMl} ml`;
+        let purchaseDate = item.purchaseDate || 'N/A';
 
         stockBody.innerHTML += `
-          <tr>
-            <td><strong>${item.name}</strong></td>
-            <td>${item.bottleSize} ml</td>
-            <td>${item.totalMl.toFixed(1)} ml</td>
-            <td><span class="stock-badge">${breakdownText}</span></td>
-            <td>
-              <button class="btn-edit" onclick="editVapeStock('${item.id}')">Edit</button>
-              <button class="btn-remove" onclick="deleteVapeStock('${item.id}')">Delete</button>
-            </td>
-          </tr>
+            <tr>
+                <td><strong>${item.name}</strong></td>
+                <td>Rs. ${item.cost}</td>
+                <td>${item.bottleSize} ml</td>
+                <td>${item.totalMl.toFixed(1)} ml</td>
+                <td><span class="stock-badge">${breakdownText}</span></td>
+                <td>${purchaseDate}</td>
+                <td>
+                    <button class="btn-edit" onclick="editVapeStock('${item.id}')">Edit</button>
+                    <button class="btn-remove" onclick="deleteVapeStock('${item.id}')">Delete</button>
+                </td>
+            </tr>
         `;
-      });
-    }
+    });
+}
 
-    function deleteVapeStock(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      if(confirm('Kya aap is flavor ko vape stock se delete karna chahte hain?')) {
+function deleteVapeStock(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    if(confirm('Kya aap is item ko vape stock se delete karna chahte hain?')) {
         vapeStock = vapeStock.filter(i => i.id !== id);
         db.ref('posData/vapeStock').set(vapeStock);
-      }
     }
+}
 
-    // --- Udhaar Functions ---
-    function addUdhaarEntry() {
-      if(!currentRole) { logoutSystem(); return; }
-      let name = document.getElementById('udhaar-name').value.trim();
-      let phone = document.getElementById('udhaar-phone').value.trim();
-      let amount = parseFloat(document.getElementById('udhaar-amount').value);
+// --- Udhaar Functions ---
+function addUdhaarEntry() {
+    if(!currentRole) { logoutSystem(); return; }
+    let name = document.getElementById('udhaar-name').value.trim();
+    let phone = document.getElementById('udhaar-phone').value.trim();
+    let amount = parseFloat(document.getElementById('udhaar-amount').value);
 
-      if (!name || isNaN(amount) || amount <= 0) {
+    if (!name || isNaN(amount) || amount <= 0) {
         alert('Baraye meharbani customer name aur valid amount enter karein!');
         return;
-      }
+    }
 
-      udhaarList.unshift({
+    udhaarList.unshift({
         id: Date.now().toString(),
-        date: new Date().toLocaleDateString(),
+        date: currentBusinessDate,
         name: name,
         phone: phone || 'N/A',
         amount: amount,
         status: 'Pending'
-      });
+    });
 
-      db.ref('posData/udhaarList').set(udhaarList);
+    db.ref('posData/udhaarList').set(udhaarList);
+    document.getElementById('udhaar-name').value = '';
+    document.getElementById('udhaar-phone').value = '';
+    document.getElementById('udhaar-amount').value = '';
+}
 
-      document.getElementById('udhaar-name').value = '';
-      document.getElementById('udhaar-phone').value = '';
-      document.getElementById('udhaar-amount').value = '';
-    }
+function renderUdhaar() {
+    let tbody = document.getElementById('udhaar-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    let totalUdhaar = 0;
 
-    function renderUdhaar() {
-      let tbody = document.getElementById('udhaar-list');
-      if(!tbody) return;
-      tbody.innerHTML = '';
-      let totalUdhaar = 0;
-
-      udhaarList.forEach(item => {
+    udhaarList.forEach(item => {
         if(item.status === 'Pending') totalUdhaar += item.amount;
         let badge = item.status === 'Pending' ? '<span class="badge-status-pending">Pending</span>' : '<span class="badge-status-paid">Paid</span>';
-        
         tbody.innerHTML += `
-          <tr>
-            <td>${item.date}</td>
-            <td><strong>${item.name}</strong></td>
-            <td>${item.phone}</td>
-            <td>Rs. ${item.amount}</td>
-            <td>${badge}</td>
-            <td>
-              ${item.status === 'Pending' ? `<button class="btn-add-item" style="padding: 4px 10px; font-size: 12px; margin-right: 5px;" onclick="markUdhaarPaid('${item.id}')">Mark Paid</button>` : ''}
-              <button class="btn-remove" onclick="deleteUdhaar('${item.id}')">X</button>
-            </td>
-          </tr>
+            <tr>
+                <td>${item.date}</td>
+                <td><strong>${item.name}</strong></td>
+                <td>${item.phone}</td>
+                <td>Rs. ${item.amount}</td>
+                <td>${badge}</td>
+                <td>
+                    ${item.status === 'Pending' ? `<button class="btn-add-item" style="padding: 4px 10px; font-size: 12px; margin-right: 5px;" onclick="markUdhaarPaid('${item.id}')">Mark Paid</button>` : ''}
+                    <button class="btn-remove" onclick="deleteUdhaar('${item.id}')">X</button>
+                </td>
+            </tr>
         `;
-      });
-      document.getElementById('total-udhaar-badge').innerText = 'Total Udhaar: Rs. ' + totalUdhaar;
-    }
+    });
 
-    function markUdhaarPaid(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      let item = udhaarList.find(i => i.id === id);
-      if(item) {
+    document.getElementById('total-udhaar-badge').innerText = 'Total Udhaar: Rs. ' + totalUdhaar;
+}
+
+function markUdhaarPaid(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    let item = udhaarList.find(i => i.id === id);
+    if(item) {
         item.status = 'Paid';
         db.ref('posData/udhaarList').set(udhaarList);
-      }
     }
+}
 
-    function deleteUdhaar(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      udhaarList = udhaarList.filter(i => i.id !== id);
-      db.ref('posData/udhaarList').set(udhaarList);
-    }
+function deleteUdhaar(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    udhaarList = udhaarList.filter(i => i.id !== id);
+    db.ref('posData/udhaarList').set(udhaarList);
+}
 
-    // --- Banking Functions ---
-    function addBankTransaction() {
-      if(!currentRole) { logoutSystem(); return; }
-      let service = document.getElementById('bank-type').value;
-      let action = document.getElementById('bank-action').value;
-      let amount = parseFloat(document.getElementById('bank-amount').value);
-      let commission = parseFloat(document.getElementById('bank-commission').value) || 0;
+// --- Banking Functions ---
+function addBankTransaction() {
+    if(!currentRole) { logoutSystem(); return; }
+    let service = document.getElementById('bank-type').value;
+    let action = document.getElementById('bank-action').value;
+    let amount = parseFloat(document.getElementById('bank-amount').value);
+    let commission = parseFloat(document.getElementById('bank-commission').value) || 0;
 
-      if (isNaN(amount) || amount <= 0) {
+    if (isNaN(amount) || amount <= 0) {
         alert('Baraye meharbani valid transaction amount enter karein!');
         return;
-      }
+    }
 
-      bankHistory.unshift({
+    bankHistory.unshift({
         id: Date.now().toString(),
+        date: currentBusinessDate,
         time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         service: service,
         action: action,
         amount: amount,
         commission: commission
-      });
+    });
 
-      db.ref('posData/bankHistory').set(bankHistory);
+    db.ref('posData/bankHistory').set(bankHistory);
+    document.getElementById('bank-amount').value = '';
+    document.getElementById('bank-commission').value = '';
+}
 
-      document.getElementById('bank-amount').value = '';
-      document.getElementById('bank-commission').value = '';
-    }
+function renderBanking() {
+    let tbody = document.getElementById('bank-history-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    let totalComm = 0;
 
-    function renderBanking() {
-      let tbody = document.getElementById('bank-history-list');
-      if(!tbody) return;
-      tbody.innerHTML = '';
-      let totalComm = 0;
-
-      bankHistory.forEach(item => {
+    bankHistory.forEach(item => {
         totalComm += item.commission;
         tbody.innerHTML += `
-          <tr>
-            <td>${item.time}</td>
-            <td><strong>${item.service}</strong></td>
-            <td>${item.action}</td>
-            <td>Rs. ${item.amount}</td>
-            <td><strong style="color: green;">+ Rs. ${item.commission}</strong></td>
-            <td><button class="btn-remove" onclick="deleteBankTx('${item.id}')">X</button></td>
-          </tr>
+            <tr>
+                <td>${item.date || 'N/A'}</td>
+                <td>${item.time}</td>
+                <td><strong>${item.service}</strong></td>
+                <td>${item.action}</td>
+                <td>Rs. ${item.amount}</td>
+                <td><strong style="color: green;">+ Rs. ${item.commission}</strong></td>
+                <td><button class="btn-remove" onclick="deleteBankTx('${item.id}')">X</button></td>
+            </tr>
         `;
-      });
-      document.getElementById('total-commission-badge').innerText = 'Total Commission: Rs. ' + totalComm;
-    }
+    });
 
-    function deleteBankTx(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      bankHistory = bankHistory.filter(i => i.id !== id);
-      db.ref('posData/bankHistory').set(bankHistory);
-    }
+    document.getElementById('total-commission-badge').innerText = 'Total Commission: Rs. ' + totalComm;
+}
 
-    // --- Sales & Expense Functions ---
-    function renderSalesHistory() {
-      let salesBody = document.getElementById('sales-history-list');
-      if(!salesBody) return;
-      salesBody.innerHTML = '';
-      
-      let totalCash = 0;
-      let vapeTotal = 0;
-      let mobileTotal = 0;
+function deleteBankTx(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    bankHistory = bankHistory.filter(i => i.id !== id);
+    db.ref('posData/bankHistory').set(bankHistory);
+}
 
-      salesHistory.forEach(sale => {
+// --- Sales & Expense Functions ---
+function renderSalesHistory() {
+    let salesBody = document.getElementById('sales-history-list');
+    if(!salesBody) return;
+    salesBody.innerHTML = '';
+    let totalCash = 0;
+    let vapeTotal = 0;
+    let mobileTotal = 0;
+
+    let filteredSales = salesHistory.filter(sale => (sale.date || currentBusinessDate) === currentBusinessDate);
+
+    filteredSales.forEach(sale => {
         totalCash += sale.amount;
-
         if (sale.cartDetails && Array.isArray(sale.cartDetails)) {
-          sale.cartDetails.forEach(item => {
-            let itemTotal = item.category === 'vape' ? item.salePrice : (item.salePrice * item.qty);
-            if (item.category === 'vape') vapeTotal += itemTotal;
-            else mobileTotal += itemTotal;
-          });
+            sale.cartDetails.forEach(item => {
+                let itemTotal = item.category === 'E-Liquids' ? item.salePrice : (item.salePrice * item.qty);
+                if (item.category === 'E-Liquids' || sale.category === 'vape') vapeTotal += itemTotal;
+                else mobileTotal += itemTotal;
+            });
         } else {
-          if (sale.category === 'vape') vapeTotal += sale.amount;
-          else mobileTotal += sale.amount;
+            if (sale.category === 'vape') vapeTotal += sale.amount;
+            else mobileTotal += sale.amount;
         }
 
-        let badgeHtml = sale.category === 'vape' 
-          ? '<span class="badge-vape">Vape</span>' 
-          : (sale.category === 'mobile' ? '<span class="badge-mobile">Mobile</span>' : '<span class="badge-vape">Mixed</span>');
-
-        let custDisplay = sale.customerName 
-          ? `<strong>${sale.customerName}</strong> ${sale.customerPhone ? '('+sale.customerPhone+')' : ''}` 
-          : 'Walk-in Customer';
+        let badgeHtml = sale.category === 'vape' ? '<span class="badge-vape">Vape</span>' : (sale.category === 'mobile' ? '<span class="badge-mobile">Mobile</span>' : '<span class="badge-vape">Mixed</span>');
+        let custDisplay = sale.customerName ? `<strong>${sale.customerName}</strong> ${sale.customerPhone ? '('+sale.customerPhone+')' : ''}` : 'Walk-in Customer';
 
         salesBody.innerHTML += `
-          <tr>
-            <td>${sale.time}</td>
-            <td>${custDisplay}</td>
-            <td>${badgeHtml}</td>
-            <td>${sale.items}</td>
-            <td><strong>Rs. ${sale.amount.toFixed(1)}</strong></td>
-          </tr>
+            <tr>
+                <td>${sale.time}</td>
+                <td>${custDisplay}</td>
+                <td>${badgeHtml}</td>
+                <td>${sale.items}</td>
+                <td><strong>Rs. ${sale.amount.toFixed(1)}</strong></td>
+            </tr>
         `;
-      });
+    });
 
-      document.getElementById('total-daily-cash').innerText = 'Rs. ' + totalCash.toFixed(1);
-      document.getElementById('vape-daily-cash').innerText = 'Rs. ' + vapeTotal.toFixed(1);
-      document.getElementById('mobile-daily-cash').innerText = 'Rs. ' + mobileTotal.toFixed(1);
+    document.getElementById('total-daily-cash').innerText = 'Rs. ' + totalCash.toFixed(1);
+    document.getElementById('vape-daily-cash').innerText = 'Rs. ' + vapeTotal.toFixed(1);
+    document.getElementById('mobile-daily-cash').innerText = 'Rs. ' + mobileTotal.toFixed(1);
+}
+
+function clearSalesHistory() {
+    if(!currentRole) { logoutSystem(); return; }
+    if (confirm(`Kya aap ${currentBusinessDate} ki saari sales reset/clear karna chahte hain?`)) {
+        salesHistory = salesHistory.filter(sale => (sale.date || currentBusinessDate) !== currentBusinessDate);
+        db.ref('posData/salesHistory').set(salesHistory);
     }
+}
 
-    function clearSalesHistory() {
-      if(!currentRole) { logoutSystem(); return; }
-      if (confirm('Kya aap waqai aaj ka saara sales record reset/clear karna chahte hain?')) {
-        salesHistory = [];
-        db.ref('posData/salesHistory').remove();
-      }
-    }
+function addExpenseEntry() {
+    if(!currentRole) { logoutSystem(); return; }
+    let title = document.getElementById('expense-title').value.trim();
+    let amount = parseFloat(document.getElementById('expense-amount').value);
+    let note = document.getElementById('expense-note').value.trim();
 
-    function addExpenseEntry() {
-      if(!currentRole) { logoutSystem(); return; }
-      let title = document.getElementById('expense-title').value.trim();
-      let amount = parseFloat(document.getElementById('expense-amount').value);
-      let note = document.getElementById('expense-note').value.trim();
-
-      if (!title || isNaN(amount) || amount <= 0) {
+    if (!title || isNaN(amount) || amount <= 0) {
         alert('Baraye meharbani expense title aur valid amount enter karein!');
         return;
-      }
+    }
 
-      expenseList.unshift({
+    expenseList.unshift({
         id: Date.now().toString(),
-        date: new Date().toLocaleDateString(),
+        date: currentBusinessDate,
         title: title,
         amount: amount,
         note: note || '-'
-      });
+    });
 
-      db.ref('posData/expenseList').set(expenseList);
+    db.ref('posData/expenseList').set(expenseList);
+    document.getElementById('expense-title').value = '';
+    document.getElementById('expense-amount').value = '';
+    document.getElementById('expense-note').value = '';
+}
 
-      document.getElementById('expense-title').value = '';
-      document.getElementById('expense-amount').value = '';
-      document.getElementById('expense-note').value = '';
-    }
+function renderExpenses() {
+    let tbody = document.getElementById('expense-list');
+    if(!tbody) return;
+    tbody.innerHTML = '';
+    let totalExp = 0;
 
-    function renderExpenses() {
-      let tbody = document.getElementById('expense-list');
-      if(!tbody) return;
-      tbody.innerHTML = '';
-      let totalExp = 0;
+    let filteredExpenses = expenseList.filter(item => (item.date || currentBusinessDate) === currentBusinessDate);
 
-      expenseList.forEach(item => {
+    filteredExpenses.forEach(item => {
         totalExp += item.amount;
         tbody.innerHTML += `
-          <tr>
-            <td>${item.date}</td>
-            <td><strong>${item.title}</strong></td>
-            <td>${item.note}</td>
-            <td>Rs. ${item.amount}</td>
-            <td><button class="btn-remove" onclick="deleteExpense('${item.id}')">X</button></td>
-          </tr>
+            <tr>
+                <td>${item.date}</td>
+                <td><strong>${item.title}</strong></td>
+                <td>${item.note}</td>
+                <td>Rs. ${item.amount}</td>
+                <td><button class="btn-remove" onclick="deleteExpense('${item.id}')">X</button></td>
+            </tr>
         `;
-      });
-      document.getElementById('total-expense-badge').innerText = 'Total Expenses: Rs. ' + totalExp;
-    }
+    });
 
-    function deleteExpense(id) {
-      if(!currentRole) { logoutSystem(); return; }
-      expenseList = expenseList.filter(i => i.id !== id);
-      db.ref('posData/expenseList').set(expenseList);
-    }
+    document.getElementById('total-expense-badge').innerText = 'Total Expenses: Rs. ' + totalExp;
+    updateAdminReports();
+}
 
-    function updateAdminReports() {
-      let totalSales = salesHistory.reduce((sum, i) => sum + i.amount, 0);
-      let totalExpenses = expenseList.reduce((sum, i) => sum + i.amount, 0);
-      let netProfit = totalSales - totalExpenses;
-      let totalUdhaar = udhaarList.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0);
+function deleteExpense(id) {
+    if(!currentRole) { logoutSystem(); return; }
+    expenseList = expenseList.filter(i => i.id !== id);
+    db.ref('posData/expenseList').set(expenseList);
+}
 
-      let elSales = document.getElementById('admin-total-sales');
-      let elExp = document.getElementById('admin-total-expenses');
-      let elProfit = document.getElementById('admin-net-profit');
-      let elUdhaar = document.getElementById('admin-total-udhaar');
+function updateAdminReports() {
+    let filteredSales = salesHistory.filter(sale => (sale.date || currentBusinessDate) === currentBusinessDate);
+    let filteredExpenses = expenseList.filter(exp => (exp.date || currentBusinessDate) === currentBusinessDate);
 
-      if(elSales) elSales.innerText = 'Rs. ' + totalSales.toFixed(1);
-      if(elExp) elExp.innerText = 'Rs. ' + totalExpenses.toFixed(1);
-      if(elProfit) elProfit.innerText = 'Rs. ' + netProfit.toFixed(1);
-      if(elUdhaar) elUdhaar.innerText = 'Rs. ' + totalUdhaar;
-    }
-  </script>
+    let totalSales = filteredSales.reduce((sum, i) => sum + i.amount, 0);
+    let totalExpenses = filteredExpenses.reduce((sum, i) => sum + i.amount, 0);
+    let totalCommission = bankHistory.filter(b => (b.date || currentBusinessDate) === currentBusinessDate).reduce((sum, i) => sum + i.commission, 0);
+    let totalUdhaar = udhaarList.filter(i => i.status === 'Pending').reduce((sum, i) => sum + i.amount, 0);
+
+    let mobileProfit = 0;
+    let vapeProfit = 0;
+
+    filteredSales.forEach(sale => {
+        let saleDate = sale.date || currentBusinessDate;
+        if (saleDate === currentBusinessDate) {
+            if (sale.cartDetails && Array.isArray(sale.cartDetails)) {
+                sale.cartDetails.forEach(item => {
+                    let itemRevenue = item.category === 'E-Liquids' ? (item.salePrice || 0) : ((item.salePrice || 0) * (item.qty || 1));
+                    let itemTotalCost = item.costPrice !== undefined ? item.costPrice : 0;
+                    let itemProfit = itemRevenue - itemTotalCost;
+
+                    if (item.category === 'E-Liquids' || sale.category === 'vape') {
+                        vapeProfit += itemProfit;
+                    } else {
+                        mobileProfit += itemProfit;
+                    }
+                });
+            } else {
+                if (sale.category === 'vape') {
+                    vapeProfit += sale.amount * 0.3;
+                } else {
+                    mobileProfit += sale.amount * 0.2;
+                }
+            }
+        }
+    });
+
+    let netProfit = (mobileProfit + vapeProfit + totalCommission) - totalExpenses;
+
+    let elSales = document.getElementById('admin-total-sales');
+    let elMobileProfit = document.getElementById('admin-mobile-profit');
+    let elVapeProfit = document.getElementById('admin-vape-profit');
+    let elExp = document.getElementById('admin-total-expenses');
+    let elProfit = document.getElementById('admin-net-profit');
+    let elUdhaar = document.getElementById('admin-total-udhaar');
+
+    if(elSales) elSales.innerText = 'Rs. ' + totalSales.toFixed(1);
+    if(elMobileProfit) elMobileProfit.innerText = 'Rs. ' + mobileProfit.toFixed(1);
+    if(elVapeProfit) elVapeProfit.innerText = 'Rs. ' + vapeProfit.toFixed(1);
+    if(elExp) elExp.extras = 'Rs. ' + totalExpenses.toFixed(1); // fixed
+    if(elExp) elExp.innerText = 'Rs. ' + totalExpenses.toFixed(1);
+    if(elProfit) elProfit.innerText = 'Rs. ' + netProfit.toFixed(1);
+    if(elUdhaar) elUdhaar.innerText = 'Rs. ' + totalUdhaar;
+}
+</script>
 </body>
 </html>
